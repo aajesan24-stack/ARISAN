@@ -1,0 +1,6 @@
+{
+  "name": "ARISAN BD",
+  "description": "Simple Look, Premium Jewellery - Fashion Jewellery Ecommerce Store in Bangladesh",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

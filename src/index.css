@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+@theme {
+  --color-stone-950: #ffffff;
+  --color-stone-900: #f6f7f9;
+  --color-stone-850: #ebeef2;
+  --color-stone-800: #e1e4e8;
+  --color-stone-750: #d3d6db;
+  --color-stone-700: #bcbfc4;
+  
+  --color-stone-100: #202226;
+  --color-stone-150: #2a2c30;
+  --color-stone-200: #33373d;
+  --color-stone-300: #4d515a;
+  --color-stone-400: #6c727e;
+  --color-stone-450: #7f8693;
+  --color-stone-500: #9099a6;
+  --color-stone-605: #afb7c4;
+  --color-stone-600: #ced4da;
+  
+  --color-amber-300: #fbe3a1;
+  --color-amber-400: #ebb016;
+  --color-amber-450: #d99e0f;
+  --color-amber-500: #ebb016;
+  --color-amber-600: #b78408;
+  
+  --color-emerald-950: #2a2c30;
+  --color-emerald-900: #33373d;
+  --color-emerald-400: #ebb016;
+}
+
+/* Custom visual refinements to make the UI pop elegantly in a premium modern eCommerce theme */
+body {
+  background-color: #f6f7f9;
+  color: #202226;
+}
+
+/* Shadows suitable for elegant light modes */
+.shadow-2xl {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+}
+.shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.03);
+}
