@@ -42,6 +42,9 @@ export const CheckoutView: React.FC = () => {
       setName(currentUser.name || '');
       setEmail(currentUser.email || '');
       setPhone(currentUser.phone || '');
+      if (currentUser.district) {
+        setDistrict(currentUser.district);
+      }
     }
   }, [currentUser]);
 

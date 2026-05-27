@@ -14,6 +14,7 @@ import {
   INITIAL_SETTINGS
 } from '../types';
 import { getTranslation } from '../utils/translations';
+import { supabase } from '../lib/supabase';
 
 interface AppContextType {
   products: Product[];
@@ -25,9 +26,12 @@ interface AppContextType {
   reviews: Review[];
   
   // Auth state
-  currentUser: { email: string; name: string; role: 'admin' | 'customer'; phone?: string } | null;
-  login: (email: string, name: string, role: 'admin' | 'customer', phone?: string) => void;
+  currentUser: { email: string; name: string; role: 'admin' | 'customer'; phone?: string; district?: string } | null;
+  login: (email: string, name: string, role: 'admin' | 'customer', phone?: string, district?: string) => void;
   logout: () => void;
+  registeredCustomers: { phone: string; password?: string; district: string; name: string }[];
+  registerCustomer: (phone: string, password?: string, district: string, name?: string) => { success: boolean; message: string };
+  loginWithPhone: (phone: string, password?: string) => { success: boolean; message: string };
 
   // Active page routing
   activeTab: string;
@@ -141,8 +145,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         parsed.buttonBgColor = '#e23e38';
         parsed.buttonTextColor = '#ffffff';
       }
-      localStorage.setItem('arisan_settings', JSON.stringify(parsed));
-      return parsed;
+      
+      const merged = { ...INITIAL_SETTINGS, ...parsed };
+      if (!merged.translationOverrides) {
+        merged.translationOverrides = { en: {}, bn: {} };
+      }
+      localStorage.setItem('arisan_settings', JSON.stringify(merged));
+      return merged;
     }
     return INITIAL_SETTINGS;
   });
@@ -157,6 +166,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return local ? JSON.parse(local) : null;
   });
 
+  const [registeredCustomers, setRegisteredCustomers] = useState<{ phone: string; password?: string; district: string; name: string }[]>(() => {
+    const local = localStorage.getItem('arisan_registered_customers');
+    return local ? JSON.parse(local) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('arisan_registered_customers', JSON.stringify(registeredCustomers));
+  }, [registeredCustomers]);
+
   // Language States
   const [language, setLanguageState] = useState<'bn' | 'en'>(() => {
     const saved = localStorage.getItem('arisan_language');
@@ -169,6 +187,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const t = (key: string): string => {
+    if (settings && settings.translationOverrides) {
+      const overridesByLang = settings.translationOverrides[language];
+      if (overridesByLang && overridesByLang[key] !== undefined && overridesByLang[key] !== '') {
+        return overridesByLang[key];
+      }
+    }
     return getTranslation(key, language);
   };
 
@@ -183,6 +207,73 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [trackedOrder, setTrackedOrder] = useState<Order | null>(null);
 
   // Synchronizers
+  useEffect(() => {
+    const fetchAllFromSupabase = async () => {
+      try {
+        // Fetch products
+        const { data: dbProducts, error: pErr } = await supabase.from('arisan_products').select('*');
+        if (!pErr && dbProducts && dbProducts.length > 0) {
+          const parsed: Product[] = dbProducts.map((row: any) => row.data);
+          setProducts(parsed);
+        } else if (!pErr) {
+          // If connection works but DB is empty, pre-populate with current local copy
+          const uploads = products.map(p => supabase.from('arisan_products').upsert({ id: p.id, data: p }));
+          await Promise.all(uploads);
+        }
+
+        // Fetch categories
+        const { data: dbCategories, error: cErr } = await supabase.from('arisan_categories').select('*');
+        if (!cErr && dbCategories && dbCategories.length > 0) {
+          const parsed: Category[] = dbCategories.map((row: any) => row.data);
+          setCategories(parsed);
+        } else if (!cErr) {
+          const uploads = categories.map(c => supabase.from('arisan_categories').upsert({ id: c.id, data: c }));
+          await Promise.all(uploads);
+        }
+
+        // Fetch coupons
+        const { data: dbCoupons, error: coupErr } = await supabase.from('arisan_coupons').select('*');
+        if (!coupErr && dbCoupons && dbCoupons.length > 0) {
+          const parsed: Coupon[] = dbCoupons.map((row: any) => row.data);
+          setCoupons(parsed);
+        } else if (!coupErr) {
+          const uploads = coupons.map(c => supabase.from('arisan_coupons').upsert({ id: c.code, data: c }));
+          await Promise.all(uploads);
+        }
+
+        // Fetch settings
+        const { data: dbSettings, error: sErr } = await supabase.from('arisan_settings').select('*').eq('id', 'default_settings').single();
+        if (!sErr && dbSettings && dbSettings.data) {
+          setSettings(dbSettings.data);
+        } else if (!sErr) {
+          await supabase.from('arisan_settings').upsert({ id: 'default_settings', data: settings });
+        }
+
+        // Fetch reviews
+        const { data: dbReviews, error: rErr } = await supabase.from('arisan_reviews').select('*');
+        if (!rErr && dbReviews && dbReviews.length > 0) {
+          const parsed: Review[] = dbReviews.map((row: any) => row.data);
+          setReviews(parsed);
+        } else if (!rErr) {
+          const uploads = reviews.map(r => supabase.from('arisan_reviews').upsert({ id: r.id, data: r }));
+          await Promise.all(uploads);
+        }
+
+        // Fetch orders
+        const { data: dbOrders, error: oErr } = await supabase.from('arisan_orders').select('*');
+        if (!oErr && dbOrders && dbOrders.length > 0) {
+          const parsed: Order[] = dbOrders.map((row: any) => row.data);
+          parsed.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+          setOrders(parsed);
+        }
+      } catch (err) {
+        console.warn('Supabase automatic hydrate block warning:', err);
+      }
+    };
+
+    fetchAllFromSupabase();
+  }, []);
+
   useEffect(() => {
     localStorage.setItem('arisan_products', JSON.stringify(products));
   }, [products]);
@@ -227,13 +318,70 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Auth mechanisms
-  const login = (email: string, name: string, role: 'admin' | 'customer', phone?: string) => {
-    setCurrentUser({ email, name, role, phone });
+  const login = (email: string, name: string, role: 'admin' | 'customer', phone?: string, district?: string) => {
+    setCurrentUser({ email, name, role, phone, district });
   };
 
   const logout = () => {
     setCurrentUser(null);
     setActiveTab('home');
+  };
+
+  const registerCustomer = (phone: string, password?: string, district: string, name?: string) => {
+    const normalizedPhone = phone.trim();
+    if (!normalizedPhone) {
+      return { success: false, message: language === 'bn' ? 'অনুগ্রহ করে মোবাইল নম্বর দিন।' : 'Please provide a phone number.' };
+    }
+    
+    const exists = registeredCustomers.some(c => c.phone === normalizedPhone);
+    if (exists) {
+      return { success: false, message: language === 'bn' ? 'এই মোবাইল নম্বরটি দিয়ে ইতিপূর্বেই একাউন্ট তৈরি করা হয়েছে।' : 'An account with this phone number already exists.' };
+    }
+
+    const displayName = name?.trim() || `${language === 'bn' ? 'ক্রেতা' : 'Customer'} (${normalizedPhone.slice(-4)})`;
+    const newCustomer = {
+      phone: normalizedPhone,
+      password: password || '',
+      district,
+      name: displayName
+    };
+
+    setRegisteredCustomers(prev => [...prev, newCustomer]);
+    
+    // Auto login
+    login(normalizedPhone + '@arisan.com', displayName, 'customer', normalizedPhone, district);
+    return { success: true, message: language === 'bn' ? 'সফলভাবে একাউন্ট তৈরি হয়েছে!' : 'Account registered successfully!' };
+  };
+
+  const loginWithPhone = (phone: string, password?: string) => {
+    const normalizedPhone = phone.trim();
+    const cleanPassword = password || '';
+
+    if (!normalizedPhone) {
+      return { success: false, message: language === 'bn' ? 'অনুগ্রহ করে মোবাইল নম্বর দিন।' : 'Please provide a phone number.' };
+    }
+
+    // Direct check for admin credentials bypass or standard customers
+    const adminEmailConfig = settings?.adminEmail || 'jesanbinary07@gmail.com';
+    const adminPasswordConfig = settings?.adminPassword || 'jesan2026';
+    if (normalizedPhone === adminEmailConfig || normalizedPhone === '+8801313840136' || normalizedPhone === '01313840136') {
+      if (cleanPassword === adminPasswordConfig) {
+        login(adminEmailConfig, 'Tarikul Alam Jesan', 'admin', '+8801313840136', 'Dhaka');
+        return { success: true, message: 'Admin authenticated.' };
+      }
+    }
+
+    const matched = registeredCustomers.find(c => c.phone === normalizedPhone);
+    if (!matched) {
+      return { success: false, message: language === 'bn' ? 'এই মোবাইল নম্বর দিয়ে কোনো একাউন্ট পাওয়া যায়নি।' : 'No account found with this phone number.' };
+    }
+
+    if (matched.password !== cleanPassword) {
+      return { success: false, message: language === 'bn' ? 'মোবাইল নম্বর অথবা পাসওয়ার্ডটি সঠিক নয়।' : 'Incorrect phone number or password.' };
+    }
+
+    login(normalizedPhone + '@arisan.com', matched.name, 'customer', normalizedPhone, matched.district);
+    return { success: true, message: language === 'bn' ? 'লগইন সফল হয়েছে!' : 'Logged in successfully!' };
   };
 
   // Cart operations
@@ -373,23 +521,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       createdAt: new Date().toISOString()
     };
 
-    // Deduct stocks
+    // Deduct stocks and sync products
     setProducts((prevProducts) => {
-      return prevProducts.map((p) => {
+      const nextProducts = prevProducts.map((p) => {
         const orderItem = cart.find((i) => i.product.id === p.id);
         if (orderItem) {
           const remainingStock = Math.max(0, p.stockCount - orderItem.quantity);
-          return {
+          const updatedP = {
             ...p,
             stockCount: remainingStock,
             stockStatus: remainingStock === 0 ? 'Out of Stock' : remainingStock < 10 ? 'Low Stock' : 'In Stock'
           };
+          // Sync single product stock change to Supabase
+          supabase.from('arisan_products').upsert({ id: p.id, data: updatedP }).then(({ error }) => {
+            if (error) console.error('Supabase product stock sync error:', error);
+          });
+          return updatedP;
         }
         return p;
       });
+      return nextProducts;
     });
 
     setOrders((prev) => [newOrder, ...prev]);
+
+    // Save order to Supabase database
+    supabase.from('arisan_orders').upsert({ id: orderId, data: newOrder }).then(({ error }) => {
+      if (error) console.error('Supabase order write error:', error);
+    });
     
     // Save order ID to local storage device history so user can find it later
     try {
@@ -417,9 +576,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
     setTrackedOrder(null);
     return null;
-  };
-
-  // Administration tasks
+  };  // Administration tasks
   const addProduct = (p: Omit<Product, 'id'>) => {
     const newId = `prod-${Date.now()}`;
     const newProduct: Product = {
@@ -429,46 +586,93 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       reviewsCount: p.reviewsCount || 0
     };
     setProducts((prev) => [newProduct, ...prev]);
+
+    // Supabase sync
+    supabase.from('arisan_products').upsert({ id: newId, data: newProduct }).then(({ error }) => {
+      if (error) console.error('Supabase add product error:', error);
+    });
   };
 
   const updateProduct = (updated: Product) => {
     setProducts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+
+    // Supabase sync
+    supabase.from('arisan_products').upsert({ id: updated.id, data: updated }).then(({ error }) => {
+      if (error) console.error('Supabase update product error:', error);
+    });
   };
 
   const deleteProduct = (id: string) => {
     setProducts((prev) => prev.filter((p) => p.id !== id));
+
+    // Supabase sync
+    supabase.from('arisan_products').delete().eq('id', id).then(({ error }) => {
+      if (error) console.error('Supabase delete product error:', error);
+    });
   };
 
   const updateSettings = (updated: WebsiteSettings) => {
     setSettings(updated);
+
+    // Supabase sync
+    supabase.from('arisan_settings').upsert({ id: 'default_settings', data: updated }).then(({ error }) => {
+      if (error) console.error('Supabase update settings error:', error);
+    });
   };
 
   const updateOrderStatus = (orderId: string, status: Order['status']) => {
-    setOrders((prev) =>
-      prev.map((o) => (o.id === orderId ? { ...o, status } : o))
-    );
+    setOrders((prev) => {
+      const nextOrders = prev.map((o) => {
+        if (o.id === orderId) {
+          const updatedO = { ...o, status };
+          // Supabase sync
+          supabase.from('arisan_orders').upsert({ id: orderId, data: updatedO }).then(({ error }) => {
+            if (error) console.error('Supabase update order status error:', error);
+          });
+          return updatedO;
+        }
+        return o;
+      });
+      return nextOrders;
+    });
   };
 
   const deleteOrder = (orderId: string) => {
     setOrders((prev) => prev.filter((o) => o.id !== orderId));
+
+    // Supabase sync
+    supabase.from('arisan_orders').delete().eq('id', orderId).then(({ error }) => {
+      if (error) console.error('Supabase delete order error:', error);
+    });
   };
 
   const addCoupon = (coupon: Coupon) => {
     setCoupons((prev) => {
-      // Avoid duplicate codes
       const clean = prev.filter((c) => c.code.toUpperCase() !== coupon.code.toUpperCase());
-      return [coupon, ...clean];
+      const nextCoupons = [coupon, ...clean];
+      return nextCoupons;
+    });
+
+    // Supabase sync
+    supabase.from('arisan_coupons').upsert({ id: coupon.code, data: coupon }).then(({ error }) => {
+      if (error) console.error('Supabase add coupon error:', error);
     });
   };
 
   const deleteCoupon = (code: string) => {
     setCoupons((prev) => prev.filter((c) => c.code !== code));
+
+    // Supabase sync
+    supabase.from('arisan_coupons').delete().eq('id', code).then(({ error }) => {
+      if (error) console.error('Supabase delete coupon error:', error);
+    });
   };
 
   const addReview = (productId: string, author: string, rating: number, comment: string) => {
     const matchedProduct = products.find((p) => p.id === productId);
+    const revId = `rev-${Date.now()}`;
     const newReview: Review = {
-      id: `rev-${Date.now()}`,
+      id: revId,
       productTitle: matchedProduct ? matchedProduct.title : 'Premium Jewellery Item',
       author,
       rating,
@@ -478,22 +682,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     setReviews((prev) => [newReview, ...prev]);
 
+    // Supabase sync
+    supabase.from('arisan_reviews').upsert({ id: revId, data: newReview }).then(({ error }) => {
+      if (error) console.error('Supabase add review error:', error);
+    });
+
     // Update product rating average & review counts
     if (matchedProduct) {
-      setProducts((prevProducts) =>
-        prevProducts.map((p) => {
+      setProducts((prevProducts) => {
+        const nextProducts = prevProducts.map((p) => {
           if (p.id === productId) {
             const counts = p.reviewsCount + 1;
             const newRating = parseFloat(((p.rating * p.reviewsCount + rating) / counts).toFixed(1));
-            return {
+            const updatedP = {
               ...p,
               reviewsCount: counts,
               rating: newRating
             };
+            // Supabase sync
+            supabase.from('arisan_products').upsert({ id: productId, data: updatedP }).then(({ error }) => {
+              if (error) console.error('Supabase product review update error:', error);
+            });
+            return updatedP;
           }
           return p;
-        })
-      );
+        });
+        return nextProducts;
+      });
     }
   };
 
@@ -510,6 +725,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         currentUser,
         login,
         logout,
+        registeredCustomers,
+        registerCustomer,
+        loginWithPhone,
         activeTab,
         setActiveTab,
         selectedProductId,

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { Search, ShoppingBag, User, Heart, Menu, X, LogIn, ChevronDown, Compass, ShieldAlert, BookOpen, Settings } from 'lucide-react';
+import { StyledText } from './StyledText';
+import { BANGLADESH_DISTRICTS } from '../types';
 
 export const Navbar: React.FC = () => {
   const {
@@ -12,6 +14,8 @@ export const Navbar: React.FC = () => {
     currentUser,
     logout,
     login,
+    registerCustomer,
+    loginWithPhone,
     products,
     setSelectedProductId,
     settings,
@@ -33,6 +37,7 @@ export const Navbar: React.FC = () => {
   const [role, setRole] = useState<'admin' | 'customer'>('customer');
   const [phone, setPhone] = useState('');
   const [authError, setAuthError] = useState('');
+  const [selectedDistrict, setSelectedDistrict] = useState('Dhaka');
 
   const filteredSearchProducts = searchQuery.trim()
     ? products.filter((p) =>
@@ -58,35 +63,46 @@ export const Navbar: React.FC = () => {
 
   const handleAuthSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) {
-      setAuthError(language === 'bn' ? 'অনুগ্রহ করে একটি ইমেইল দিন' : 'Please provide an email Address');
-      return;
-    }
-
-    const displayName = name || (email.split('@')[0]);
-
-    login(email, displayName, 'customer', phone);
-    setAuthModalOpen(false);
-    setEmail('');
-    setName('');
-    setPhone('');
-    setPassword('');
     setAuthError('');
-    
-    // Redirect customer to home view
-    setActiveTab('home');
+
+    if (authMode === 'login') {
+      const res = loginWithPhone(phone, password);
+      if (res.success) {
+        setAuthModalOpen(false);
+        setPhone('');
+        setPassword('');
+        setAuthError('');
+        // Redirect customer to home view
+        setActiveTab('home');
+      } else {
+        setAuthError(res.message);
+      }
+    } else {
+      // Register (Sign Up)
+      const res = registerCustomer(phone, password, selectedDistrict);
+      if (res.success) {
+        setAuthModalOpen(false);
+        setPhone('');
+        setPassword('');
+        setAuthError('');
+        // Redirect customer to home view
+        setActiveTab('home');
+      } else {
+        setAuthError(res.message);
+      }
+    }
   };
 
   return (
     <>
       {/* Real-time Ticker */}
       <div className="bg-emerald-950 text-amber-400 py-2 px-4 text-center text-xs tracking-wider uppercase font-medium border-b border-amber-500/20">
-        <div className="container mx-auto flex justify-center items-center gap-2 overflow-hidden whitespace-nowrap">
+        <div className="container mx-auto flex justify-center items-center gap-2 overflow-hidden">
           <span className="inline-block animate-pulse">✨</span>
           <span className="text-white hover:text-amber-300 font-sans tracking-wide">
             {language === 'bn' && settings.announcementText?.includes('FREE Express Home Delivery')
               ? '✨ ৩,০০০ টাকার বেশি অর্ডারে সারা বাংলাদেশে ফ্রী ক্যাশ অন ডেলিভারি! ✨'
-              : settings.announcementText}
+              : <StyledText text={settings.announcementText} />}
           </span>
           <span className="inline-block animate-pulse">✨</span>
         </div>
@@ -209,9 +225,12 @@ export const Navbar: React.FC = () => {
               {/* Profile triggers */}
               {currentUser ? (
                 <div className="flex items-center gap-2">
+                  <span className="hidden md:inline text-xs text-[var(--theme-header-text)]/80 font-medium">
+                    {language === 'bn' ? 'স্বাগতম, ' : 'Hi, '} {currentUser.name}
+                  </span>
                   <button
                     onClick={logout}
-                    className="text-[var(--theme-header-text)]/85 text-xs px-2 py-1 border border-[var(--theme-header-text)]/25 rounded hover:text-[var(--theme-header-text)] hover:bg-[var(--theme-header-text)]/10 transition-all cursor-pointer"
+                    className="text-[var(--theme-header-text)]/85 text-xs px-2.5 py-1 border border-[var(--theme-header-text)]/20 hover:border-[var(--theme-header-text)]/50 rounded hover:text-[var(--theme-header-text)] hover:bg-[var(--theme-header-text)]/5 transition-all cursor-pointer"
                   >
                     {t('nav.logout')}
                   </button>
@@ -225,7 +244,7 @@ export const Navbar: React.FC = () => {
                   className="flex items-center gap-1.5 text-[var(--theme-header-text)]/90 hover:text-[var(--theme-header-text)] text-sm font-medium cursor-pointer"
                 >
                   <User className="w-4.5 h-4.5 text-[var(--theme-header-text)]" />
-                  <span className="hidden sm:inline">{t('nav.login')}</span>
+                  <span className="hidden sm:inline">{language === 'bn' ? 'লগইন' : t('nav.login')}</span>
                 </button>
               )}
 
@@ -329,14 +348,14 @@ export const Navbar: React.FC = () => {
               </span>
               <h3 className="text-lg font-medium text-stone-100 mt-2">
                 {authMode === 'login' 
-                  ? (language === 'bn' ? 'ফিরে আসায় স্বাগতম' : 'Welcome Back')
-                  : (language === 'bn' ? 'কাস্টমার প্রোফাইল তৈরি করুন' : 'Create Customer Profile')
+                  ? (language === 'bn' ? 'কাস্টমার আইডি লগইন' : 'Customer Account Login')
+                  : (language === 'bn' ? 'নতুন কাস্টমার সাইনআপ' : 'New Customer Register')
                 }
               </h3>
               <p className="text-xs text-stone-400 mt-1">
                 {language === 'bn'
-                  ? 'ডিসকাউন্ট কুপন, অর্ডার হিস্ট্রি এবং লাইভ অর্ডার ট্র্যাকিং সুবিধা পান।'
-                  : 'Access luxury discounts, order logs & real-time jewel tracking.'
+                  ? 'প্রিমিয়াম অর্ডারিং, ডিসকাউন্ট কুপন এবং লাইভ অর্ডার ট্র্যাকিং সুবিধা পান।'
+                  : 'Access premium features, luxury discounts, and live tracking.'
                 }
               </p>
             </div>
@@ -348,58 +367,63 @@ export const Navbar: React.FC = () => {
             )}
 
             <form onSubmit={handleAuthSubmit} className="space-y-4">
-              {authMode === 'register' && (
-                <div>
-                  <label className="block text-xs font-semibold text-stone-400 mb-1.5 uppercase">
-                    {language === 'bn' ? 'সম্পূর্ণ নাম' : 'Full Name'}
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder={language === 'bn' ? 'যেমনঃ আয়েশা রহমান' : 'e.g. Ayesha Rahman'}
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full bg-stone-900 border border-stone-800 rounded px-3 py-2 text-sm text-stone-150 focus:outline-none focus:border-amber-400"
-                  />
-                </div>
-              )}
-
+              {/* Phone number field (Required for both Login & Register) */}
               <div>
                 <label className="block text-xs font-semibold text-stone-400 mb-1.5 uppercase">
-                  {language === 'bn' ? 'ইমেইল এড্রেস' : 'Email Address'}
-                </label>
-                <input
-                  type="email"
-                  required
-                  placeholder="name@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-stone-900 border border-stone-800 rounded px-3 py-2 text-sm text-stone-150 focus:outline-none focus:border-amber-400"
-                />
-              </div>
-
-
-
-              <div>
-                <label className="block text-xs font-semibold text-stone-400 mb-1.5 uppercase">
-                  {language === 'bn' ? 'মোবাইল নম্বর' : 'Phone Number'}
+                  {language === 'bn' ? 'মোবাইল নম্বর' : 'Phone Number'} <span className="text-amber-500">*</span>
                 </label>
                 <input
                   type="tel"
-                  placeholder="+88017XXXXXXXX"
+                  required
+                  placeholder="01XXXXXXXXX"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full bg-stone-900 border border-stone-800 rounded px-3 py-2 text-sm text-stone-150 focus:outline-none focus:border-amber-400"
+                  className="w-full bg-stone-900 border border-stone-800 rounded px-3 py-2 text-sm text-stone-150 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
                 />
               </div>
 
+              {/* Password field (Required for both Login & Register) */}
+              <div>
+                <label className="block text-xs font-semibold text-stone-400 mb-1.5 uppercase">
+                  {language === 'bn' ? 'পাসওয়ার্ড' : 'Password'} <span className="text-amber-500">*</span>
+                </label>
+                <input
+                  type="password"
+                  required
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full bg-stone-900 border border-stone-800 rounded px-3 py-2 text-sm text-stone-150 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
+                />
+              </div>
+
+              {/* District Select field (Required ONLY for Signup/Register) */}
+              {authMode === 'register' && (
+                <div>
+                  <label className="block text-xs font-semibold text-stone-400 mb-1.5 uppercase">
+                    {language === 'bn' ? 'জেলা সিলেক্ট (District)' : 'Select District'} <span className="text-amber-500">*</span>
+                  </label>
+                  <select
+                    value={selectedDistrict}
+                    onChange={(e) => setSelectedDistrict(e.target.value)}
+                    className="w-full bg-stone-900 border border-stone-800 rounded px-3 py-2 text-sm text-stone-200 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
+                  >
+                    {BANGLADESH_DISTRICTS.map((dist) => (
+                      <option key={dist} value={dist}>
+                        {dist}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <button
                 type="submit"
-                className="w-full bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 font-bold py-2.5 rounded hover:opacity-90 transition-opacity text-sm cursor-pointer"
+                className="w-full bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 font-bold py-2.5 rounded hover:opacity-95 transition-opacity text-sm cursor-pointer mt-2"
               >
                 {authMode === 'login' 
-                  ? (language === 'bn' ? 'প্রোফাইলে প্রবেশ করুন' : 'Unlock Account')
-                  : (language === 'bn' ? 'একাউন্ট তৈরি করুন' : 'Verify & Set Up')
+                  ? (language === 'bn' ? 'লগইন করুন' : 'Login Now')
+                  : (language === 'bn' ? 'সাইনআপ সম্পন্ন করুন' : 'Complete Signup')
                 }
               </button>
             </form>
@@ -408,22 +432,22 @@ export const Navbar: React.FC = () => {
               <div className="text-xs text-stone-400">
                 {authMode === 'login' ? (
                   <>
-                    {language === 'bn' ? 'প্রোফাইল নেই?' : "Don't have a profile?"}{' '}
+                    {language === 'bn' ? 'নতুন কাস্টমার?' : "No account yet?"}{' '}
                     <button 
-                      onClick={() => { setAuthMode('register'); setRole('customer'); }} 
+                      onClick={() => { setAuthMode('register'); setAuthError(''); }} 
                       className="text-amber-400 hover:underline inline-block focus:outline-none"
                     >
-                      {language === 'bn' ? 'নতুন তৈরি করুন' : 'Create one now'}
+                      {language === 'bn' ? 'সাইনআপ করুন' : 'Sign up now'}
                     </button>
                   </>
                 ) : (
                   <>
-                    {language === 'bn' ? 'আগে থেকেই রেজিস্টার্ড?' : 'Already registered?'}{' '}
+                    {language === 'bn' ? 'লগইন করতে চান?' : 'Already have an account?'}{' '}
                     <button 
-                      onClick={() => { setAuthMode('login'); setRole('customer'); }} 
+                      onClick={() => { setAuthMode('login'); setAuthError(''); }} 
                       className="text-amber-400 hover:underline inline-block focus:outline-none"
                     >
-                      {language === 'bn' ? 'সরাসরি লগইন করুন' : 'Login directly'}
+                      {language === 'bn' ? 'লগইন করুন' : 'Login here'}
                     </button>
                   </>
                 )}

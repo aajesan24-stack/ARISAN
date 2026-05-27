@@ -3,6 +3,7 @@ import { Product } from '../types';
 import { useApp } from '../context/AppContext';
 import { Heart, ShoppingCart, Eye, Sparkles } from 'lucide-react';
 import { getTranslatedProduct, getTranslatedCategoryName } from '../utils/translations';
+import { StyledText } from './StyledText';
 
 interface ProductCardProps {
   product: Product;
@@ -154,7 +155,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             {transProd.title}
           </h3>
           <p className="text-xs text-stone-400 line-clamp-2 mt-1 min-h-[32px]">
-            {transProd.description}
+            <StyledText text={transProd.description} />
           </p>
 
           <div className="flex items-center gap-2.5 mt-3">

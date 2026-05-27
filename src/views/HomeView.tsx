@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext';
 import { ProductCard } from '../components/ProductCard';
 import { ArrowRight, Sparkles, Star, ShieldCheck, Truck, RotateCcw, Award, Mail, Clock } from 'lucide-react';
 import { getTranslatedCategoryName } from '../utils/translations';
+import { StyledText } from '../components/StyledText';
 
 export const HomeView: React.FC = () => {
   const { products, categories, settings, reviews, setActiveTab, setSelectedCategorySlug, language, t } = useApp();
@@ -31,7 +32,10 @@ export const HomeView: React.FC = () => {
     <div className="space-y-20 pb-16">
       
       {/* 1. HERO BANNER */}
-      <section className="relative min-h-[70vh] md:min-h-[85vh] flex items-center justify-center text-center bg-transparent overflow-hidden py-16">
+      <section 
+        className={`relative min-h-[70vh] md:min-h-[85vh] flex items-center justify-center text-center overflow-hidden py-16 ${settings.hideHeroOnMobile ? 'hidden sm:flex' : 'flex'}`}
+        style={{ backgroundColor: settings.heroBgColor, color: settings.heroTextColor }}
+      >
         {/* Background Visual Layer */}
         <div className="absolute inset-0 z-0 opacity-40">
           <img
@@ -52,27 +56,28 @@ export const HomeView: React.FC = () => {
             <Sparkles className="w-4 h-4 text-amber-400 animate-spin" />
             {language === 'bn' ? 'সিম্পল লুক, প্রিমিয়াম জুয়েলারি' : 'Simple Look, Premium Jewellery'}
           </span>
-          <h1 className="text-4xl sm:text-5xl md:text-7xl font-sans font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-stone-100 via-amber-200 to-yellow-100 tracking-tight leading-tight leading-none">
+          <h1 className="text-4xl sm:text-5xl md:text-7xl font-sans font-extrabold tracking-tight leading-tight">
             {language === 'bn' && settings.heroHeadline?.includes('Crafted Elegance')
               ? 'প্রতিটি মুহূর্তের জন্য অভিজাত জুয়েলারি'
-              : settings.heroHeadline}
+              : <StyledText text={settings.heroHeadline} />}
           </h1>
-          <p className="text-sm md:text-lg text-stone-300 leading-relaxed max-w-2xl mx-auto font-sans">
+          <p className="text-sm md:text-lg leading-relaxed max-w-2xl mx-auto font-sans opacity-90">
             {language === 'bn' && settings.heroSubheadline?.includes('ARISAN BD presents')
               ? 'ARISAN BD নিয়ে এসেছে অত্যন্ত প্রিমিয়াম এবং ট্রেন্ডি ফ্যাশন জুয়েলারি কালেকশন, যা আপনার প্রতিদিনের সাধারণ রূপকেও করে তুলবে অনন্য এবং রাজকীয়।'
-              : settings.heroSubheadline}
+              : <StyledText text={settings.heroSubheadline} />}
           </p>
           <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
               onClick={() => { setSelectedCategorySlug(null); setActiveTab('shop'); }}
-              className="w-full sm:w-auto bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 px-8 py-3.5 rounded font-bold uppercase text-xs tracking-widest hover:opacity-90 transition-opacity flex items-center justify-center gap-2 cursor-pointer shadow-lg active:scale-98"
+              className="w-full sm:w-auto btn-luxury-cta px-8 py-3.5 font-bold uppercase text-xs tracking-widest flex items-center justify-center gap-2 cursor-pointer shadow-lg active:scale-98"
+              style={{ backgroundColor: settings.buttonBgColor, color: settings.buttonTextColor }}
             >
               <span>{language === 'bn' ? 'সব কালেকশন দেখুন' : 'Explore Curation'}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
             <button
               onClick={() => setActiveTab('about-us')}
-              className="w-full sm:w-auto min-w-[200px] bg-stone-900/.8 text-stone-100 border border-stone-800 hover:border-amber-400/50 px-8 py-3.5 rounded font-bold uppercase text-xs tracking-widest transition-colors cursor-pointer"
+              className="w-full sm:w-auto min-w-[200px] bg-stone-900/80 text-stone-100 border border-stone-850 hover:border-amber-400/50 px-8 py-3.5 rounded font-bold uppercase text-xs tracking-widest transition-colors cursor-pointer"
             >
               {language === 'bn' ? 'আমাদের হেরিটেজ গল্প' : 'Our Heritage Story'}
             </button>
@@ -82,7 +87,10 @@ export const HomeView: React.FC = () => {
 
       {/* 2. CORE VALUE STATEMENTS (TRUST TRIGGERS) */}
       <section className="container mx-auto px-4 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 bg-stone-950 border border-stone-900 rounded-xl p-8">
+        <div 
+          className="grid grid-cols-1 md:grid-cols-4 gap-8 rounded-xl p-8 border border-stone-850/60 shadow-sm"
+          style={{ backgroundColor: settings.categoriesBgColor, color: settings.categoriesTextColor }}
+        >
           <div className="flex gap-4 items-start text-left">
             <div className="p-3 bg-emerald-950 text-emerald-400 rounded-lg border border-emerald-500/10">
               <Truck className="w-5 h-5" />
@@ -139,12 +147,15 @@ export const HomeView: React.FC = () => {
       </section>
 
       {/* 3. ELEGANT JEWELLERY SHOWCASE (CATEGORIES) */}
-      <section className="container mx-auto px-4 lg:px-8 text-center space-y-12">
+      <section 
+        className="container mx-auto px-4 lg:px-8 text-center space-y-12 py-12 rounded-xl"
+        style={{ backgroundColor: settings.categoriesBgColor, color: settings.categoriesTextColor }}
+      >
         <div className="space-y-2">
           <span className="text-[10px] uppercase tracking-[0.25em] font-sans text-amber-400 font-semibold">
             {language === 'bn' ? 'প্রিমিয়াম ক্যাটাগরি' : 'Luxury Categories'}
           </span>
-          <h2 className="text-2xl md:text-4xl font-sans font-bold text-stone-100">
+          <h2 className="text-2xl md:text-4xl font-sans font-bold" style={{ color: settings.categoriesTextColor }}>
             {language === 'bn' ? 'রয়াল ক্যাটাগরি অনুযায়ী অনুসন্ধান' : 'Shop by Royal Category'}
           </h2>
           <div className="w-16 h-0.5 bg-amber-400 mx-auto mt-2"></div>
@@ -181,24 +192,27 @@ export const HomeView: React.FC = () => {
 
       {/* 4. EID CELEBRATION / SPECIAL PROMO countdown BANNER */}
       {settings.eidOfferActive && (
-        <section className="bg-gradient-to-r from-emerald-950 via-black to-emerald-950 border-t border-b border-amber-500/20 py-16">
+        <section 
+          className={`border-t border-b border-amber-500/20 py-16 ${settings.hideEidSectionOnMobile ? 'hidden sm:block' : 'block'}`}
+          style={{ backgroundColor: settings.eidSectionBgColor, color: settings.eidSectionTextColor }}
+        >
           <div className="container mx-auto px-4 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center text-left">
             <div className="space-y-6">
               <span className="inline-flex items-center gap-1.5 bg-amber-500/10 text-amber-300 border border-amber-500/25 px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase">
                 {language === 'bn' ? '🌙 উৎসবমুখর বিশেষ অফার' : '🌙 Festive Celebration Offer'}
               </span>
-              <h2 className="text-3xl md:text-5xl font-sans font-extrabold text-stone-100 tracking-tight leading-tight">
+              <h2 className="text-3xl md:text-5xl font-sans font-extrabold tracking-tight leading-tight" style={{ color: settings.eidSectionTextColor }}>
                 {language === 'bn' ? (
                   <>ঈদ স্পেশাল লাক্সারি কালেকশন <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-300">সাশ্রয় করুন {settings.eidDiscountPercent}%</span></>
                 ) : (
                   <>Premium Eid Al-Adha Collection <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-300">Save {settings.eidDiscountPercent}%</span></>
                 )}
               </h2>
-              <p className="text-stone-300 text-sm md:text-base leading-relaxed font-sans">
+              <p className="text-sm md:text-base leading-relaxed font-sans" style={{ color: settings.eidSectionTextColor ? `${settings.eidSectionTextColor}de` : '#e2e8f0' }}>
                 {language === 'bn' ? (
-                  <>গোল্ড প্লেটেড বালা এবং টিয়ারড্রপ এমারেল্ড কানের দুলের ডিজাইন দিয়ে ঈদ সুন্দর করুন। চেকআউটের সময় কুপন কোড <strong className="text-amber-400 bg-stone-900 px-2 py-1 rounded border border-stone-850 font-mono tracking-wider">EID2026</strong> ব্যবহার করলেই পাচ্ছেন সর্বমোট বিলে সর্বোচ্চ ১৫%-২০% আকর্ষণীয় ছাড়!</>
+                  <>গোল্ড প্লেটেড বালা এবং টিয়ারড্রপ এমারেল্ড কানের দুলের ডিজাইন দিয়ে ঈদ সুন্দর করুন। চেকআউটের সময় কুপন কোড <strong className="text-amber-400 bg-stone-900 px-2 py-1 rounded border border-stone-850 font-mono tracking-wider animate-pulse">EID2026</strong> ব্যবহার করলেই পাচ্ছেন সর্বমোট বিলে সর্বোচ্চ ১৫%-২০% আকর্ষণীয় ছাড়!</>
                 ) : (
-                  <>Elevate your look with royal gold plated bangles and deep emerald drops. Simply enter coupon code <strong className="text-amber-400 bg-stone-900 px-2 py-1 rounded border border-stone-850 font-mono tracking-wider">EID2026</strong> during checkout for an instant 15% to 20% discount on entire jewellery catalogs!</>
+                  <>Elevate your look with royal gold plated bangles and deep emerald drops. Simply enter coupon code <strong className="text-amber-400 bg-stone-900 px-2 py-1 rounded border border-stone-850 font-mono tracking-wider animate-pulse">EID2026</strong> during checkout for an instant 15% to 20% discount on entire jewellery catalogs!</>
                 )}
               </p>
               
@@ -212,7 +226,7 @@ export const HomeView: React.FC = () => {
                   <span className="block text-xl md:text-2xl font-bold text-amber-400">18</span>
                   <span className="text-[9px] text-stone-400 uppercase">{language === 'bn' ? 'ঘণ্টা' : 'Hours'}</span>
                 </div>
-                <div className="bg-stone-905 border border-stone-800 p-3 rounded text-center">
+                <div className="bg-stone-950 border border-stone-800 p-3 rounded text-center">
                   <span className="block text-xl md:text-2xl font-bold text-amber-400">42</span>
                   <span className="text-[9px] text-stone-400 uppercase">{language === 'bn' ? 'মিনিট' : 'Mins'}</span>
                 </div>
@@ -225,7 +239,8 @@ export const HomeView: React.FC = () => {
               <div>
                 <button
                   onClick={() => { setSelectedCategorySlug(null); setActiveTab('shop'); }}
-                  className="bg-amber-400 hover:bg-amber-500 text-stone-950 font-bold uppercase text-xs tracking-widest px-8 py-3.5 rounded cursor-pointer shadow-lg active:scale-98 transition-all"
+                  className="btn-luxury-cta text-xs tracking-widest px-8 py-3.5 font-bold uppercase cursor-pointer"
+                  style={{ backgroundColor: settings.buttonBgColor, color: settings.buttonTextColor }}
                 >
                   {language === 'bn' ? 'অফারের গহনাগুলো দেখুন' : 'Shop Offer Products'}
                 </button>
@@ -234,7 +249,7 @@ export const HomeView: React.FC = () => {
 
             <div className="relative rounded-lg overflow-hidden border border-amber-500/10 shadow-2xl">
               <img
-                src="https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?q=80&w=600&auto=format&fit=crop"
+                src={settings.eidImage || "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?q=80&w=600&auto=format&fit=crop"}
                 alt="Eid Jewels"
                 className="w-full h-96 object-cover referrer-no-referrer"
                 referrerPolicy="no-referrer"
@@ -246,12 +261,15 @@ export const HomeView: React.FC = () => {
       )}
 
       {/* 5. FEATURED Curation */}
-      <section className="container mx-auto px-4 lg:px-8 text-center space-y-12">
+      <section 
+        className="container mx-auto px-4 lg:px-8 text-center space-y-12 py-12 rounded-xl"
+        style={{ backgroundColor: settings.bestsellersBgColor, color: settings.bestsellersTextColor }}
+      >
         <div className="space-y-2">
           <span className="text-[10px] uppercase tracking-[0.25em] font-sans text-amber-400 font-semibold">
             {language === 'bn' ? 'আরিয়ান বিশেষ পছন্দ' : 'ARISAN Favourites'}
           </span>
-          <h2 className="text-2xl md:text-4xl font-sans font-bold text-stone-100">
+          <h2 className="text-2xl md:text-4xl font-sans font-bold" style={{ color: settings.bestsellersTextColor }}>
             {language === 'bn' ? 'আমাদের সেরা গহনা সমূহ' : 'Featured Masterpieces'}
           </h2>
           <div className="w-16 h-0.5 bg-amber-400 mx-auto mt-2"></div>
@@ -265,12 +283,15 @@ export const HomeView: React.FC = () => {
       </section>
 
       {/* 6. TRENDING SELECTION */}
-      <section className="container mx-auto px-4 lg:px-8 text-center space-y-12 bg-black/30 py-12 rounded-xl border border-stone-900">
+      <section 
+        className="container mx-auto px-4 lg:px-8 text-center space-y-12 py-12 rounded-xl border border-stone-850"
+        style={{ backgroundColor: settings.bestsellersBgColor, color: settings.bestsellersTextColor }}
+      >
         <div className="space-y-2">
           <span className="text-[10px] uppercase tracking-[0.25em] font-sans text-amber-400 font-semibold">
             {language === 'bn' ? 'ভাইরাল অলংকার' : 'Viral Jewels'}
           </span>
-          <h2 className="text-2xl md:text-4xl font-sans font-bold text-stone-100">
+          <h2 className="text-2xl md:text-4xl font-sans font-bold" style={{ color: settings.bestsellersTextColor }}>
             {language === 'bn' ? 'বর্তমানে সবচেয়ে বেশি বিক্রিত' : 'Trending Right Now'}
           </h2>
           <div className="w-16 h-0.5 bg-amber-400 mx-auto mt-2"></div>
@@ -284,12 +305,15 @@ export const HomeView: React.FC = () => {
       </section>
 
       {/* 7. NEW ARRIVALS */}
-      <section className="container mx-auto px-4 lg:px-8 text-center space-y-12">
+      <section 
+        className="container mx-auto px-4 lg:px-8 text-center space-y-12 py-12 rounded-xl"
+        style={{ backgroundColor: settings.newArrivalsBgColor, color: settings.newArrivalsTextColor }}
+      >
         <div className="space-y-2">
           <span className="text-[10px] uppercase tracking-[0.25em] font-sans text-emerald-400 font-semibold">
             {language === 'bn' ? 'নতুন কালেকশন' : 'Just Unboxed'}
           </span>
-          <h2 className="text-2xl md:text-4xl font-sans font-bold text-stone-100">
+          <h2 className="text-2xl md:text-4xl font-sans font-bold" style={{ color: settings.newArrivalsTextColor }}>
             {language === 'bn' ? 'চলতি সপ্তাহের নতুন ডিজাইন' : 'New Arrivals'}
           </h2>
           <div className="w-16 h-0.5 bg-amber-400 mx-auto mt-2"></div>
@@ -352,16 +376,19 @@ export const HomeView: React.FC = () => {
 
       {/* 9. PREMIUM NEWSLETTER SUBSCRIBE */}
       <section className="container mx-auto px-4 lg:px-8">
-        <div className="relative bg-gradient-to-r from-emerald-950 via-stone-950 to-stone-950 border border-stone-900 rounded-xl p-8 md:p-12 overflow-hidden text-center">
+        <div 
+          className="relative border border-stone-900 rounded-xl p-8 md:p-12 overflow-hidden text-center"
+          style={{ backgroundColor: settings.newsletterBgColor || '#064e3b', color: settings.newsletterTextColor || '#ffffff' }}
+        >
           <div className="absolute top-0 right-0 w-48 h-48 bg-amber-500/5 rounded-full blur-2xl"></div>
           
           <div className="max-w-2xl mx-auto space-y-6">
             <Mail className="w-10 h-10 text-amber-400 mx-auto animate-pulse" />
             <div className="space-y-1.5">
-              <h3 className="text-xl md:text-3xl font-sans font-bold text-stone-100">
+              <h3 className="text-xl md:text-3xl font-sans font-bold" style={{ color: settings.newsletterTextColor || '#ffffff' }}>
                 {language === 'bn' ? 'আরিযান ভিআইপি ক্লায়েন্ট লিস্ট' : 'Join the ARISAN Client list'}
               </h3>
-              <p className="text-stone-300 text-xs md:text-sm">
+              <p className="text-xs md:text-sm opacity-90" style={{ color: settings.newsletterTextColor ? `${settings.newsletterTextColor}f2` : '#e2e8f0' }}>
                 {language === 'bn' 
                   ? 'জেসান কর্তৃক সরাসরি সিলেক্ট করা সিক্রেট জুয়েলারি কালেকশন এবং বাংলাদেশে আরিযান এর ফেস্টিভ ডিসকাউন্ট এর খবর সবার আগে ইমেইলে পেয়ে যান।'
                   : 'Get email notifications about secret collections curated by Md Tarikul Alam Jesan, special offers and discounts in Bangladesh. No spam.'}

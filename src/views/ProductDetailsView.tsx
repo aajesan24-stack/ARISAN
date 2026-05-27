@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { Star, Heart, ShoppingBag, Truck, ShieldCheck, Share2, ArrowLeft, ArrowUpRight, MessageSquare } from 'lucide-react';
 import { getTranslatedProduct, getTranslatedCategoryName } from '../utils/translations';
+import { StyledText } from '../components/StyledText';
 
 export const ProductDetailsView: React.FC = () => {
   const {
@@ -199,7 +200,7 @@ export const ProductDetailsView: React.FC = () => {
             </div>
 
             <p className="text-sm md:text-base text-stone-300 leading-relaxed font-sans">
-              {transProd.description}
+              <StyledText text={transProd.description} />
             </p>
 
             {/* Sizing selections */}

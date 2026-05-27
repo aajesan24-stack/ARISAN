@@ -97,6 +97,7 @@ export interface WebsiteSettings {
   heroHeadline: string;
   heroSubheadline: string;
   heroImage: string;
+  eidImage?: string;
   eidOfferActive: boolean;
   eidDiscountPercent: number;
   headerBgColor?: string;
@@ -110,6 +111,48 @@ export interface WebsiteSettings {
   deliveryChargeInsideDhaka?: number;
   deliveryChargeOutsideDhaka?: number;
   freeDeliveryThreshold?: number;
+  
+  // Font override options
+  fontFamily?: string;
+  fontSizeScale?: 'compact' | 'normal' | 'spacious';
+  
+  // Custom CSS block override
+  customCSS?: string;
+  
+  // Custom Translation overrides
+  translationOverrides?: {
+    en?: Record<string, string>;
+    bn?: Record<string, string>;
+  };
+  
+  // Section background & color overrides
+  bodyBgColor?: string;
+  bodyTextColor?: string;
+  heroBgColor?: string;
+  heroTextColor?: string;
+  categoriesBgColor?: string;
+  categoriesTextColor?: string;
+  bestsellersBgColor?: string;
+  bestsellersTextColor?: string;
+  newArrivalsBgColor?: string;
+  newArrivalsTextColor?: string;
+  eidSectionBgColor?: string;
+  eidSectionTextColor?: string;
+  footerBgColor?: string;
+  footerTextColor?: string;
+  newsletterBgColor?: string;
+  newsletterTextColor?: string;
+  
+  // Button design styles
+  btnBorderRadius?: 'none' | 'sm' | 'md' | 'lg' | 'full';
+  btnPaddingStyle?: 'compact' | 'normal' | 'spacious';
+  btnShadowStyle?: 'none' | 'soft' | 'intense';
+  
+  // Desktop vs Mobile specific parameters
+  mobileStickyCart?: boolean;
+  hideHeroOnMobile?: boolean;
+  hideEidSectionOnMobile?: boolean;
+  mobileFontSizeScale?: 'compact' | 'normal' | 'spacious';
 }
 
 // Initial Mock Seed Data
@@ -344,6 +387,7 @@ export const INITIAL_SETTINGS: WebsiteSettings = {
   heroHeadline: 'Crafted Elegance For Every Occasion',
   heroSubheadline: 'ARISAN BD presents a curation of premium, minimalistic fashion jewellery styled for the modern lifestyle under a budget that respects your heart.',
   heroImage: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=1200&auto=format&fit=crop',
+  eidImage: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?q=80&w=600&auto=format&fit=crop',
   eidOfferActive: true,
   eidDiscountPercent: 20,
   headerBgColor: '#ffffff',
@@ -356,7 +400,45 @@ export const INITIAL_SETTINGS: WebsiteSettings = {
   adminPassword: 'jesan2026',
   deliveryChargeInsideDhaka: 80,
   deliveryChargeOutsideDhaka: 150,
-  freeDeliveryThreshold: 3000
+  freeDeliveryThreshold: 3000,
+  
+  // Font defaults
+  fontFamily: 'Inter',
+  fontSizeScale: 'normal',
+  customCSS: '',
+  translationOverrides: {
+    en: {},
+    bn: {}
+  },
+  
+  // Button design style defaults
+  btnBorderRadius: 'md',
+  btnPaddingStyle: 'normal',
+  btnShadowStyle: 'soft',
+  
+  // Layout defaults
+  mobileStickyCart: true,
+  hideHeroOnMobile: false,
+  hideEidSectionOnMobile: false,
+  mobileFontSizeScale: 'normal',
+  
+  // Custom section background & text colors
+  bodyBgColor: '#f6f7f9',
+  bodyTextColor: '#202226',
+  heroBgColor: '#f6f7f9',
+  heroTextColor: '#202226',
+  categoriesBgColor: '#ffffff',
+  categoriesTextColor: '#202226',
+  bestsellersBgColor: '#ffffff',
+  bestsellersTextColor: '#202226',
+  newArrivalsBgColor: '#f6f7f9',
+  newArrivalsTextColor: '#202226',
+  eidSectionBgColor: '#064e3b',
+  eidSectionTextColor: '#ffffff',
+  footerBgColor: '#1c1e21',
+  footerTextColor: '#ebeef2',
+  newsletterBgColor: '#064e3b',
+  newsletterTextColor: '#ffffff'
 };
 
 export const BANGLADESH_DISTRICTS = [
