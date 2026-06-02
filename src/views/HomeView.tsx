@@ -234,68 +234,16 @@ export const HomeView: React.FC = () => {
       {/* 4. EID CELEBRATION / SPECIAL PROMO countdown BANNER */}
       {settings.eidOfferActive && (
         <section 
-          className={`border-t border-b border-amber-500/20 py-16 ${settings.hideEidSectionOnMobile ? 'hidden sm:block' : 'block'}`}
-          style={{ backgroundColor: settings.eidSectionBgColor, color: settings.eidSectionTextColor }}
+          className={`py-8 md:py-12 ${settings.hideEidSectionOnMobile ? 'hidden sm:block' : 'block'}`}
         >
-          <div className="container mx-auto px-4 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center text-left">
-            <div className="space-y-6">
-              <span className="inline-flex items-center gap-1.5 bg-amber-500/10 text-amber-300 border border-amber-500/25 px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase">
-                {language === 'bn' ? '🌙 উৎসবমুখর বিশেষ অফার' : '🌙 Festive Celebration Offer'}
-              </span>
-              <h2 className="text-3xl md:text-5xl font-sans font-extrabold tracking-tight leading-tight" style={{ color: settings.eidSectionTextColor }}>
-                {language === 'bn' ? (
-                  <>ঈদ স্পেশাল লাক্সারি কালেকশন <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-300">সাশ্রয় করুন {settings.eidDiscountPercent}%</span></>
-                ) : (
-                  <>Premium Eid Al-Adha Collection <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-300">Save {settings.eidDiscountPercent}%</span></>
-                )}
-              </h2>
-              <p className="text-sm md:text-base leading-relaxed font-sans" style={{ color: settings.eidSectionTextColor ? `${settings.eidSectionTextColor}de` : '#e2e8f0' }}>
-                {language === 'bn' ? (
-                  <>গোল্ড প্লেটেড বালা এবং টিয়ারড্রপ এমারেল্ড কানের দুলের ডিজাইন দিয়ে ঈদ সুন্দর করুন। চেকআউটের সময় কুপন কোড <strong className="text-amber-400 bg-stone-900 px-2 py-1 rounded border border-stone-850 font-mono tracking-wider animate-pulse">EID2026</strong> ব্যবহার করলেই পাচ্ছেন সর্বমোট বিলে সর্বোচ্চ ১৫%-২০% আকর্ষণীয় ছাড়!</>
-                ) : (
-                  <>Elevate your look with royal gold plated bangles and deep emerald drops. Simply enter coupon code <strong className="text-amber-400 bg-stone-900 px-2 py-1 rounded border border-stone-850 font-mono tracking-wider animate-pulse">EID2026</strong> during checkout for an instant 15% to 20% discount on entire jewellery catalogs!</>
-                )}
-              </p>
-              
-              {/* Simulated countdown clock */}
-              <div className="grid grid-cols-4 gap-4 max-w-xs font-mono">
-                <div className="bg-stone-900 border border-stone-800 p-3 rounded text-center">
-                  <span className="block text-xl md:text-2xl font-bold text-amber-400">04</span>
-                  <span className="text-[9px] text-stone-400 uppercase">{language === 'bn' ? 'দিন' : 'Days'}</span>
-                </div>
-                <div className="bg-stone-900 border border-stone-800 p-3 rounded text-center">
-                  <span className="block text-xl md:text-2xl font-bold text-amber-400">18</span>
-                  <span className="text-[9px] text-stone-400 uppercase">{language === 'bn' ? 'ঘণ্টা' : 'Hours'}</span>
-                </div>
-                <div className="bg-stone-950 border border-stone-800 p-3 rounded text-center">
-                  <span className="block text-xl md:text-2xl font-bold text-amber-400">42</span>
-                  <span className="text-[9px] text-stone-400 uppercase">{language === 'bn' ? 'মিনিট' : 'Mins'}</span>
-                </div>
-                <div className="bg-stone-900 border border-stone-800 p-3 rounded text-center">
-                  <span className="block text-xl md:text-2xl font-bold text-amber-400 flex items-center justify-center gap-0.5 animate-pulse">26</span>
-                  <span className="text-[9px] text-stone-400 uppercase">{language === 'bn' ? 'সেকেন্ড' : 'Secs'}</span>
-                </div>
-              </div>
-
-              <div>
-                <button
-                  onClick={() => { setSelectedCategorySlug(null); setActiveTab('shop'); }}
-                  className="btn-luxury-cta text-xs tracking-widest px-8 py-3.5 font-bold uppercase cursor-pointer"
-                  style={{ backgroundColor: settings.buttonBgColor, color: settings.buttonTextColor }}
-                >
-                  {language === 'bn' ? 'অফারের গহনাগুলো দেখুন' : 'Shop Offer Products'}
-                </button>
-              </div>
-            </div>
-
-            <div className="relative rounded-lg overflow-hidden border border-amber-500/10 shadow-2xl">
+          <div className="container mx-auto px-4 lg:px-8 max-w-5xl">
+            <div className="relative rounded-2xl overflow-hidden border border-amber-500/20 shadow-2xl bg-stone-950">
               <img
-                src={settings.eidImage || "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?q=80&w=600&auto=format&fit=crop"}
-                alt="Eid Jewels"
-                className="w-full h-96 object-cover referrer-no-referrer"
-                referrerPolicy="no-referrer"
+                src="/src/assets/images/delivery_banner_1780419717638.png"
+                alt="ARISAN BD - Free Delivery Special Offer"
+                className="w-full h-auto object-contain cursor-pointer transition-transform duration-500 hover:scale-[1.01]"
+                onClick={() => { setSelectedCategorySlug(null); setActiveTab('shop'); }}
               />
-              <div className="absolute inset-0 bg-stone-950/20"></div>
             </div>
           </div>
         </section>
