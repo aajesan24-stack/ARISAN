@@ -580,7 +580,7 @@ export const CheckoutView: React.FC = () => {
                         <div className="bg-stone-900/80 p-3 rounded font-mono border border-stone-850 flex items-center justify-between">
                           <div>
                             <span className="text-[10px] text-stone-500 block">Personal Wallet ID</span>
-                            <span className="text-stone-150 font-bold select-all text-base text-amber-300">+8801313840136</span>
+                            <span className="text-stone-150 font-bold select-all text-base text-amber-300">{settings?.whatsappNumber || '+8801313840136'}</span>
                           </div>
                           <span className="bg-stone-950 border border-stone-800 rounded px-2 py-1 text-[10px] text-stone-400 font-sans block">
                             {language === 'bn' ? 'সেন্ড মানি করুন' : 'Send Money'}

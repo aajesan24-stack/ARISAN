@@ -30,8 +30,8 @@ interface AppContextType {
   login: (email: string, name: string, role: 'admin' | 'customer', phone?: string, district?: string) => void;
   logout: () => void;
   registeredCustomers: { phone: string; password?: string; district: string; name: string }[];
-  registerCustomer: (phone: string, password?: string, district: string, name?: string) => { success: boolean; message: string };
-  loginWithPhone: (phone: string, password?: string) => { success: boolean; message: string };
+  registerCustomer: (phone: string, password: string, district: string, name?: string) => { success: boolean; message: string };
+  loginWithPhone: (phone: string, password: string) => { success: boolean; message: string };
 
   // Active page routing
   activeTab: string;
@@ -87,6 +87,13 @@ interface AppContextType {
   language: 'bn' | 'en';
   setLanguage: (lang: 'bn' | 'en') => void;
   t: (key: string) => string;
+
+  // Visual Customizer Mode Actions
+  isVisualEditMode: boolean;
+  setVisualEditMode: (val: boolean) => void;
+  selectedEditableId: string | null;
+  setSelectedEditableId: (id: string | null) => void;
+  updateElementCustomization: (id: string, updates: any) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -95,7 +102,40 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Persistence layers via localStorage
   const [products, setProducts] = useState<Product[]>(() => {
     const local = localStorage.getItem('arisan_products');
-    return local ? JSON.parse(local) : INITIAL_PRODUCTS;
+    let loadedProducts: Product[] = local ? JSON.parse(local) : INITIAL_PRODUCTS;
+    
+    // Auto-fix or inject the Royal Pearl Jhumka Earrings product priced at 450 with the beautiful generated image!
+    const targetImage = '/src/assets/images/royal_pearl_earrings_1779973980356.png';
+    let updated = false;
+
+    // 1. If any product in local storage has price or discountPrice 450 but is missing a valid image, fix it!
+    loadedProducts = loadedProducts.map(p => {
+      if ((p.price === 450 || p.discountPrice === 450) && (!p.image || p.image.trim() === '' || p.image.includes('placeholder') || !p.image.includes('/src/assets/images'))) {
+        updated = true;
+        return {
+          ...p,
+          image: targetImage,
+          gallery: p.gallery && p.gallery.length > 0 && !p.gallery[0].includes('placeholder') ? p.gallery : [targetImage]
+        };
+      }
+      return p;
+    });
+
+    // 2. Ensure our newly seeded beautiful jewelry is present in their local list!
+    const hasRoyalEarrings = loadedProducts.some(p => p.id === 'prod-royal-pearl-earrings' || p.title.toLowerCase().includes('pearl jhumka'));
+    if (!hasRoyalEarrings) {
+      const seededRoyal = INITIAL_PRODUCTS.find(p => p.id === 'prod-royal-pearl-earrings');
+      if (seededRoyal) {
+        loadedProducts.push(seededRoyal);
+        updated = true;
+      }
+    }
+
+    if (updated && local) {
+      localStorage.setItem('arisan_products', JSON.stringify(loadedProducts));
+    }
+    
+    return loadedProducts;
   });
 
   const [categories, setCategories] = useState<Category[]>(() => {
@@ -122,29 +162,51 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const local = localStorage.getItem('arisan_settings');
     if (local) {
       const parsed = JSON.parse(local);
-      // Migrate old WhatsApp numbers to the new correct one
+      
+      // Force migration to correct brand details and color palette if ancient settings exist in user browser
       if (
-        parsed.whatsappNumber === '+8801700000000' || 
-        parsed.whatsappNumber === '01700000000' || 
-        parsed.whatsappNumber === '+8801873392781' || 
-        parsed.whatsappNumber === '+8801312840136' ||
-        !parsed.whatsappNumber
+        parsed.brandName !== 'ARISAN BD' ||
+        parsed.tagline === 'Simple Look, Premium Jewellery' ||
+        parsed.buttonBgColor === '#e23e38' ||
+        parsed.secondaryNavBgColor === '#202226'
       ) {
+        parsed.brandName = 'ARISAN BD';
+        parsed.tagline = 'Where Every Piece Tells a Story';
+        parsed.announcementText = '✨ Premium Fashion Jewellery | Nationwide Delivery Available ✨';
         parsed.whatsappNumber = '+8801313840136';
-      }
-      // Migrate old emails
-      if (parsed.email === 'support@arisanbd.com' || !parsed.email) {
         parsed.email = 'arisanbd26@gmail.com';
-      }
-      // Force migrate style presets to match the gorgeous new Shopping template-inspired premium gold, dark slate, and action-red theme
-      if (parsed.buttonBgColor !== '#e23e38' || parsed.secondaryNavBgColor !== '#202226' || !parsed.headerBgColor) {
+        parsed.facebookUrl = 'https://www.facebook.com/share/18ZkTRas19/';
+        parsed.instagramUrl = 'https://www.instagram.com/ari_san01';
+        parsed.tiktokUrl = '';
+        parsed.heroHeadline = 'Elegant Jewellery for Every Occasion';
+        parsed.heroSubheadline = 'Discover timeless beauty with premium jewellery designed to complement your unique style.';
         parsed.headerBgColor = '#ffffff';
-        parsed.headerTextColor = '#202226';
-        parsed.secondaryNavBgColor = '#202226';
+        parsed.headerTextColor = '#111827';
+        parsed.secondaryNavBgColor = '#0B6B3A';
         parsed.secondaryNavTextColor = '#ffffff';
-        parsed.buttonBgColor = '#e23e38';
+        parsed.buttonBgColor = '#0B6B3A';
         parsed.buttonTextColor = '#ffffff';
+        parsed.bodyBgColor = '#ffffff';
+        parsed.bodyTextColor = '#111827';
+        parsed.heroBgColor = '#DDECCF';
+        parsed.heroTextColor = '#0B6B3A';
+        parsed.categoriesBgColor = '#ffffff';
+        parsed.categoriesTextColor = '#111827';
+        parsed.bestsellersBgColor = '#ffffff';
+        parsed.bestsellersTextColor = '#111827';
+        parsed.newArrivalsBgColor = '#f3f4f6';
+        parsed.newArrivalsTextColor = '#111827';
+        parsed.eidSectionBgColor = '#0B6B3A';
+        parsed.eidSectionTextColor = '#ffffff';
+        parsed.footerBgColor = '#111827';
+        parsed.footerTextColor = '#ebeef2';
+        parsed.newsletterBgColor = '#0B6B3A';
+        parsed.newsletterTextColor = '#ffffff';
       }
+
+      // Migrate old WhatsApp numbers to the new correct one
+      parsed.whatsappNumber = '+8801313840136';
+      parsed.email = 'arisanbd26@gmail.com';
       
       const merged = { ...INITIAL_SETTINGS, ...parsed };
       if (!merged.translationOverrides) {
@@ -174,6 +236,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     localStorage.setItem('arisan_registered_customers', JSON.stringify(registeredCustomers));
   }, [registeredCustomers]);
+
+  // Visual Editing Mode States
+  const [isVisualEditMode, setVisualEditModeState] = useState<boolean>(() => {
+    return localStorage.getItem('arisan_visual_edit_mode') === 'true';
+  });
+  const [selectedEditableId, setSelectedEditableId] = useState<string | null>(null);
+
+  const setVisualEditMode = (val: boolean) => {
+    setVisualEditModeState(val);
+    localStorage.setItem('arisan_visual_edit_mode', val ? 'true' : 'false');
+  };
+
+  const updateElementCustomization = (id: string, updates: any) => {
+    setSettings((prev) => {
+      const existingElements = prev.editableElements || {};
+      const updatedElements = {
+        ...existingElements,
+        [id]: {
+          ...(existingElements[id] || {}),
+          ...updates,
+        },
+      };
+      const updatedSettings = {
+        ...prev,
+        editableElements: updatedElements,
+      };
+      
+      localStorage.setItem('arisan_settings', JSON.stringify(updatedSettings));
+      supabase.from('arisan_settings').upsert({ id: 'default_settings', data: updatedSettings }).then(({ error }) => {
+        if (error) console.error('Supabase update settings error in visual editor:', error);
+      });
+
+      return updatedSettings;
+    });
+  };
 
   // Language States
   const [language, setLanguageState] = useState<'bn' | 'en'>(() => {
@@ -244,7 +341,53 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         // Fetch settings
         const { data: dbSettings, error: sErr } = await supabase.from('arisan_settings').select('*').eq('id', 'default_settings').single();
         if (!sErr && dbSettings && dbSettings.data) {
-          setSettings(dbSettings.data);
+          const dbData = dbSettings.data;
+          if (
+            dbData.brandName !== 'ARISAN BD' ||
+            dbData.tagline === 'Simple Look, Premium Jewellery' ||
+            dbData.buttonBgColor === '#e23e38' ||
+            dbData.secondaryNavBgColor === '#202226'
+          ) {
+            const updatedDbSettings = {
+              ...dbData,
+              brandName: 'ARISAN BD',
+              tagline: 'Where Every Piece Tells a Story',
+              announcementText: '✨ Premium Fashion Jewellery | Nationwide Delivery Available ✨',
+              whatsappNumber: '+8801313840136',
+              email: 'arisanbd26@gmail.com',
+              facebookUrl: 'https://www.facebook.com/share/18ZkTRas19/',
+              instagramUrl: 'https://www.instagram.com/ari_san01',
+              tiktokUrl: '',
+              heroHeadline: 'Elegant Jewellery for Every Occasion',
+              heroSubheadline: 'Discover timeless beauty with premium jewellery designed to complement your unique style.',
+              headerBgColor: '#ffffff',
+              headerTextColor: '#111827',
+              secondaryNavBgColor: '#0B6B3A',
+              secondaryNavTextColor: '#ffffff',
+              buttonBgColor: '#0B6B3A',
+              buttonTextColor: '#ffffff',
+              bodyBgColor: '#ffffff',
+              bodyTextColor: '#111827',
+              heroBgColor: '#DDECCF',
+              heroTextColor: '#0B6B3A',
+              categoriesBgColor: '#ffffff',
+              categoriesTextColor: '#111827',
+              bestsellersBgColor: '#ffffff',
+              bestsellersTextColor: '#111827',
+              newArrivalsBgColor: '#f3f4f6',
+              newArrivalsTextColor: '#111827',
+              eidSectionBgColor: '#0B6B3A',
+              eidSectionTextColor: '#ffffff',
+              footerBgColor: '#111827',
+              footerTextColor: '#ebeef2',
+              newsletterBgColor: '#0B6B3A',
+              newsletterTextColor: '#ffffff'
+            };
+            setSettings(updatedDbSettings);
+            await supabase.from('arisan_settings').upsert({ id: 'default_settings', data: updatedDbSettings });
+          } else {
+            setSettings(dbData);
+          }
         } else if (!sErr) {
           await supabase.from('arisan_settings').upsert({ id: 'default_settings', data: settings });
         }
@@ -327,7 +470,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setActiveTab('home');
   };
 
-  const registerCustomer = (phone: string, password?: string, district: string, name?: string) => {
+  const registerCustomer = (phone: string, password: string, district: string, name?: string) => {
     const normalizedPhone = phone.trim();
     if (!normalizedPhone) {
       return { success: false, message: language === 'bn' ? 'অনুগ্রহ করে মোবাইল নম্বর দিন।' : 'Please provide a phone number.' };
@@ -341,7 +484,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const displayName = name?.trim() || `${language === 'bn' ? 'ক্রেতা' : 'Customer'} (${normalizedPhone.slice(-4)})`;
     const newCustomer = {
       phone: normalizedPhone,
-      password: password || '',
+      password,
       district,
       name: displayName
     };
@@ -353,7 +496,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return { success: true, message: language === 'bn' ? 'সফলভাবে একাউন্ট তৈরি হয়েছে!' : 'Account registered successfully!' };
   };
 
-  const loginWithPhone = (phone: string, password?: string) => {
+  const loginWithPhone = (phone: string, password: string) => {
     const normalizedPhone = phone.trim();
     const cleanPassword = password || '';
 
@@ -757,7 +900,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addReview,
         language,
         setLanguage,
-        t
+        t,
+        isVisualEditMode,
+        setVisualEditMode,
+        selectedEditableId,
+        setSelectedEditableId,
+        updateElementCustomization
       }}
     >
       {children}

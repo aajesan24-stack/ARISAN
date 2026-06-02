@@ -153,6 +153,45 @@ export interface WebsiteSettings {
   hideHeroOnMobile?: boolean;
   hideEidSectionOnMobile?: boolean;
   mobileFontSizeScale?: 'compact' | 'normal' | 'spacious';
+  editableElements?: Record<string, {
+    text?: string;
+    textBn?: string;
+    fontFamily?: string;
+    fontSize?: string;
+    fontWeight?: string;
+    textColor?: string;
+    bgColor?: string;
+    borderColor?: string;
+    borderWidth?: string;
+    borderStyle?: string;
+    borderRadius?: string;
+    width?: string;
+    height?: string;
+    margin?: string;
+    padding?: string;
+    top?: string;
+    bottom?: string;
+    left?: string;
+    right?: string;
+    position?: string;
+    alignment?: string;
+    opacity?: number;
+    boxShadow?: string;
+    hoverStyles?: {
+      textColor?: string;
+      bgColor?: string;
+      scale?: string;
+    };
+    animation?: string;
+    icon?: string;
+    imageUrl?: string;
+    visible?: boolean;
+    responsive?: {
+      mobileShow?: boolean;
+      tabletShow?: boolean;
+      desktopShow?: boolean;
+    }
+  }>;
 }
 
 // Initial Mock Seed Data
@@ -336,6 +375,27 @@ export const INITIAL_PRODUCTS: Product[] = [
     newArrival: true,
     rating: 4.9,
     reviewsCount: 22
+  },
+  {
+    id: 'prod-royal-pearl-earrings',
+    title: 'Royal Pearl Jhumka Earrings',
+    description: 'Exquisite traditional golden circular dangled jhumka earrings featuring premium filigree metal patterns, clear hand-set marquise white crystal petals details on the arc, and a beautiful long hanging cascade of lustrous white pearls. Styled perfect for wedding, parties, and glamorous outfits.',
+    price: 450,
+    discountPrice: 450,
+    category: 'earrings',
+    image: '/src/assets/images/royal_pearl_earrings_1779973980356.png',
+    gallery: [
+      '/src/assets/images/royal_pearl_earrings_1779973980356.png'
+    ],
+    stockStatus: 'In Stock',
+    stockCount: 50,
+    sizes: ['Standard Size'],
+    colors: ['Gold with Pearls'],
+    featured: true,
+    bestSelling: true,
+    newArrival: true,
+    rating: 5.0,
+    reviewsCount: 37
   }
 ];
 
@@ -377,24 +437,24 @@ export const INITIAL_COUPONS: Coupon[] = [
 
 export const INITIAL_SETTINGS: WebsiteSettings = {
   brandName: 'ARISAN BD',
-  tagline: 'Simple Look, Premium Jewellery',
-  announcementText: '✨ FREE Express Home Delivery across Bangladesh on orders above 3,000 BDT! ✨',
+  tagline: 'Where Every Piece Tells a Story',
+  announcementText: '✨ Premium Fashion Jewellery | Nationwide Delivery Available ✨',
   whatsappNumber: '+8801313840136',
   email: 'arisanbd26@gmail.com',
-  facebookUrl: 'https://facebook.com/arisan.bd',
-  instagramUrl: 'https://instagram.com/arisan.bd',
-  tiktokUrl: 'https://tiktok.com/@arisan.bd',
-  heroHeadline: 'Crafted Elegance For Every Occasion',
-  heroSubheadline: 'ARISAN BD presents a curation of premium, minimalistic fashion jewellery styled for the modern lifestyle under a budget that respects your heart.',
+  facebookUrl: 'https://www.facebook.com/share/18ZkTRas19/',
+  instagramUrl: 'https://www.instagram.com/ari_san01',
+  tiktokUrl: '',
+  heroHeadline: 'Elegant Jewellery for Every Occasion',
+  heroSubheadline: 'Discover timeless beauty with premium jewellery designed to complement your unique style.',
   heroImage: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=1200&auto=format&fit=crop',
   eidImage: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?q=80&w=600&auto=format&fit=crop',
   eidOfferActive: true,
   eidDiscountPercent: 20,
   headerBgColor: '#ffffff',
-  headerTextColor: '#202226',
-  secondaryNavBgColor: '#202226',
+  headerTextColor: '#111827',
+  secondaryNavBgColor: '#0B6B3A',
   secondaryNavTextColor: '#ffffff',
-  buttonBgColor: '#e23e38',
+  buttonBgColor: '#0B6B3A',
   buttonTextColor: '#ffffff',
   adminEmail: 'jesanbinary07@gmail.com',
   adminPassword: 'jesan2026',
@@ -423,22 +483,23 @@ export const INITIAL_SETTINGS: WebsiteSettings = {
   mobileFontSizeScale: 'normal',
   
   // Custom section background & text colors
-  bodyBgColor: '#f6f7f9',
-  bodyTextColor: '#202226',
-  heroBgColor: '#f6f7f9',
-  heroTextColor: '#202226',
+  bodyBgColor: '#ffffff',
+  bodyTextColor: '#111827',
+  heroBgColor: '#DDECCF',
+  heroTextColor: '#0B6B3A',
   categoriesBgColor: '#ffffff',
-  categoriesTextColor: '#202226',
+  categoriesTextColor: '#111827',
   bestsellersBgColor: '#ffffff',
-  bestsellersTextColor: '#202226',
-  newArrivalsBgColor: '#f6f7f9',
-  newArrivalsTextColor: '#202226',
-  eidSectionBgColor: '#064e3b',
+  bestsellersTextColor: '#111827',
+  newArrivalsBgColor: '#f3f4f6',
+  newArrivalsTextColor: '#111827',
+  eidSectionBgColor: '#0B6B3A',
   eidSectionTextColor: '#ffffff',
-  footerBgColor: '#1c1e21',
+  footerBgColor: '#111827',
   footerTextColor: '#ebeef2',
-  newsletterBgColor: '#064e3b',
-  newsletterTextColor: '#ffffff'
+  newsletterBgColor: '#0B6B3A',
+  newsletterTextColor: '#ffffff',
+  editableElements: {}
 };
 
 export const BANGLADESH_DISTRICTS = [

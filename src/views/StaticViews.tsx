@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { Phone, Mail, MapPin, MessageSquare, ChevronDown, CheckCircle2, Search, Compass, ShieldAlert, FileText, HelpCircle, History, Clock } from 'lucide-react';
+import { EditableElement } from '../components/EditableElement';
 
 // --- ABOUT CUSTOMER STORY VIEW ---
 export const AboutUsView: React.FC = () => {
@@ -29,7 +30,7 @@ export const AboutUsView: React.FC = () => {
             <img
               src="https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=600&auto=format&fit=crop"
               alt="ARISAN Curation craftsmanship"
-              className="w-full h-80 object-cover referrer-no-referrer"
+              className="w-full h-80 object-cover"
               referrerPolicy="no-referrer"
             />
           </div>
@@ -37,7 +38,7 @@ export const AboutUsView: React.FC = () => {
 
         <div className="border-t border-stone-900 pt-8 grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
           <div className="space-y-2">
-            <h4 className="text-lg font-bold text-amber-450 text-amber-400 font-mono">১০০%</h4>
+            <h4 className="text-lg font-bold text-amber-400 font-mono">১০০%</h4>
             <span className="block text-xs font-semibold uppercase tracking-wider text-stone-250">অ্যালার্জি প্রতিরোধী প্লেটিং</span>
             <p className="text-[11px] text-stone-400">আমাদের সকল গহনা সংবেদনশীল ত্বকের জন্য শতভাগ নিরাপদ ও দীর্ঘস্থায়ী ধাতব বেস দিয়ে তৈরি।</p>
           </div>
@@ -78,7 +79,7 @@ export const AboutUsView: React.FC = () => {
           <img
             src="https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=600&auto=format&fit=crop"
             alt="ARISAN Curation craftsmanship"
-            className="w-full h-80 object-cover referrer-no-referrer"
+            className="w-full h-80 object-cover"
             referrerPolicy="no-referrer"
           />
         </div>
@@ -86,64 +87,89 @@ export const AboutUsView: React.FC = () => {
 
       <div className="border-t border-stone-900 pt-8 grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
         <div className="space-y-2">
-          <h4 className="text-lg font-bold text-amber-450 text-amber-400 font-mono">100%</h4>
-          <span className="block text-xs font-semibold uppercase tracking-wider text-stone-250">Hypoallergenic Plating</span>
-          <p className="text-[11px] text-stone-400">All rings utilize non-tarnish physical base metals for maximum skin comfort.</p>
+          <h4 className="text-lg font-bold text-amber-400 font-mono">100%</h4>
+          <span className="block text-xs font-semibold uppercase tracking-wider text-stone-300">Allergy-Safe Plated</span>
+          <p className="text-[11px] text-stone-400">Completely hypoallergenic brass and copper bases customized for ultra-sensitive skin types.</p>
         </div>
         <div className="space-y-2">
           <h4 className="text-lg font-bold text-emerald-400 font-mono">20,000+</h4>
-          <span className="block text-xs font-semibold uppercase tracking-wider text-stone-250">Happy Client list</span>
-          <p className="text-[11px] text-stone-400">Delivering luxury aesthetic packages to every post code of Bangladesh.</p>
+          <span className="block text-xs font-semibold uppercase tracking-wider text-stone-300">Happy Adorers</span>
+          <p className="text-[11px] text-stone-400">Delivering parcels of premium royal jewelry to every postal code across Bangladesh safely.</p>
         </div>
         <div className="space-y-2">
-          <h4 className="text-lg font-bold text-stone-100 font-mono">Secure COD</h4>
-          <span className="block text-xs font-semibold uppercase tracking-wider text-stone-250">doorstop unboxing</span>
-          <p className="text-[11px] text-stone-400">Inspect the jewelry inside our emerald pouch card packaging before completing cash handovers.</p>
+          <h4 className="text-lg font-bold text-stone-100 font-mono">Cash on Delivery</h4>
+          <span className="block text-xs font-semibold uppercase tracking-wider text-stone-300">Inspection on Arrival</span>
+          <p className="text-[11px] text-stone-400">Unbox and check the pristine hand-finishing with our logistics riders before clearing invoices.</p>
         </div>
       </div>
     </div>
   );
 };
-
-
-// --- ABOUT FOUNDER VIEW ---
 export const AboutOwnerView: React.FC = () => {
   const { language } = useApp();
+  const photoSrc = '/src/assets/images/owner_photo_1780338576714.png';
 
   if (language === 'bn') {
     return (
       <div className="container mx-auto px-4 lg:px-8 py-10 max-w-4xl space-y-12 text-left animate-fadeIn">
         <div className="space-y-4 text-center">
-          <span className="text-xs uppercase tracking-[0.25em] text-amber-400 font-semibold">ব্র্যান্ডের নেপথ্যে</span>
-          <h1 className="text-3xl md:text-5xl font-sans font-extrabold text-stone-100 tracking-tight">আমাদের স্বপ্নদর্শী প্রতিষ্ঠাতা</h1>
-          <div className="w-16 h-0.5 bg-amber-400 mx-auto mt-3"></div>
+          <span className="text-xs uppercase tracking-[0.25em] text-emerald-400 font-semibold block">
+            <EditableElement id="owner-header-subtitle" defaultText="Behind The Brand" defaultTextBn="ব্র্যান্ডের নেপথ্যে">
+              ব্র্যান্ডের নেপথ্যে
+            </EditableElement>
+          </span>
+          <h1 className="text-3xl md:text-5xl font-sans font-extrabold text-stone-100 tracking-tight">
+            <EditableElement id="owner-header-title" defaultText="The Visionary Curator" defaultTextBn="আমাদের স্বপ্নদর্শী প্রতিষ্ঠাতা">
+              আমাদের স্বপ্নদর্শী প্রতিষ্ঠাতা
+            </EditableElement>
+          </h1>
+          <div className="w-16 h-0.5 bg-emerald-500 mx-auto mt-3"></div>
         </div>
 
         <div className="bg-stone-950 border border-stone-900 rounded-xl p-8 grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
           <div className="md:col-span-1 text-center space-y-4">
             <div className="relative inline-block">
-              <img
-                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=350&auto=format&fit=crop"
-                alt="Md Tarikul Alam Jesan"
-                className="w-48 h-48 object-cover rounded-full border-2 border-amber-400 mx-auto shadow-2xl animate-pulse"
-              />
+              <EditableElement id="owner-profile-image" type="image" defaultText="Md Tarikul Alam Jesan Image" style={{ borderRadius: '9999px', overflow: 'hidden' }}>
+                <img
+                  src={photoSrc}
+                  alt="Md Tarikul Alam Jesan"
+                  className="w-48 h-48 object-cover rounded-full border-2 border-emerald-500 mx-auto shadow-2xl"
+                  referrerPolicy="no-referrer"
+                />
+              </EditableElement>
               <span className="absolute bottom-2 right-6 bg-emerald-500 text-stone-950 font-bold px-3 py-0.5 rounded-full text-[9px] uppercase border border-stone-950 tracking-wider">FOUNDER</span>
             </div>
             <div>
-              <h3 className="text-lg font-bold text-stone-100 font-sans">মোঃ তারিকুল আলম জেসান</h3>
-              <span className="text-xs text-amber-400 uppercase font-mono">কিউরেটর, ঢাকা, বাংলাদেশ</span>
+              <h3 className="text-lg font-bold text-stone-100 font-sans">
+                <EditableElement id="owner-card-name" defaultText="Md Tarikul Alam Jesan" defaultTextBn="মোঃ তরিকুল আলম জিসান">
+                  মোঃ তরিকুল আলম জিসান
+                </EditableElement>
+              </h3>
+              <span className="text-xs text-emerald-400 uppercase font-mono block">
+                <EditableElement id="owner-card-role" defaultText="Founder & CEO, ARISAN BD" defaultTextBn="প্রতিষ্ঠাতা ও পরিচালক, ARISAN BD">
+                  প্রতিষ্ঠাতা ও পরিচালক, ARISAN BD
+                </EditableElement>
+              </span>
             </div>
           </div>
 
           <div className="md:col-span-2 space-y-4 font-sans text-stone-300 text-sm leading-relaxed">
-            <p>
-              ARISAN BD প্রতিষ্ঠিত হয়েছে স্বপ্নদর্শী ও দূরদর্শী ফ্যাশন উদ্যোক্তা <strong className="text-stone-100">মোঃ তারিকুল আলম জেসান</strong> এর হাত ধরে। তার স্বপ্ন ছিল বাংলাদেশে ক্রেতাদের জন্য সম্পূর্ণ বিশ্বস্ত, স্বচ্ছ এবং গ্রাহক-কেন্দ্রিক চমৎকার একটি রুচিশীল ফ্যাশন জুয়েলারি ই-কমার্স প্লাটফর্ম গড়ে তোলা।
-            </p>
-            <p>
-              অনলাইনে জুয়েলারি কেনাকাটার ক্ষেত্রে সাধারণ ক্রেতাদের মনে যে বিশ্বাসের ঘাটতি থাকে, তা দূর করার লক্ষ্যে জেসান প্রতিটি প্রোডাকশনের কঠোর গুণগত মান যাচাই (Absolute Quality Check) বাধ্যতামূলক করেছেন। আমাদের চোকার বা লকেট থেকে শুরু করে কানের দুল - প্রতিটি পণ্যই ল্যাবে কঠোর ট্রায়াল ও ফিনিশিংয়ের পর প্যাকেজিংয়ে পাঠানো হয় যাতে গ্রাহকরা পান সেরা অভিজ্ঞতা।
-            </p>
-            <blockquote className="border-l-2 border-amber-400 pl-4 py-1 text-xs italic text-amber-300">
-              "আরেজান বিডি শুধুমাত্র কোনো সাধারণ অনলাইন শপ নয়। এটি এমন একটি প্রিমিয়াম ট্রাস্টেড ব্র্যান্ড যা আমাদের দেশীয় ও পাশ্চাত্য আভিজাত্যের মিলন ঘটায়। আমাদের সম্মানিত ক্রেতারা যখন আমাদের জুয়েলারি পরিধান করেন, তারা যেন নিজেদের মার্জিত ব্যক্তিত্ব ও সৌন্দর্য নিয়ে গর্ববোধ করতে পারেন - এই আমাদের মূল সার্থকতা।"
+            <EditableElement id="owner-bio-content" defaultText="Md Tarikul Alam Jesan is the founder of ARISAN BD..." defaultTextBn="মোঃ তরিকুল আলম জিসান হলেন ARISAN BD-এর প্রতিষ্ঠাতা। বরিশালের একজন তরুণ উদ্যোক্তা হিসেবে তিনি মানুষের কাছে সাশ্রয়ী মূল্যে সুন্দর ও মানসম্পন্ন জুয়েলারি পৌঁছে দেওয়ার লক্ষ্য নিয়ে ১৯ মে, ২০২৬ সালে ARISAN BD-এর যাত্রা শুরু করেন।">
+              <p>
+                <strong className="text-stone-100">মোঃ তরিকুল আলম জিসান</strong> হলেন ARISAN BD-এর প্রতিষ্ঠাতা। বরিশালের একজন তরুণ উদ্যোক্তা হিসেবে তিনি মানুষের কাছে সাশ্রয়ী মূল্যে সুন্দর ও মানসম্পন্ন জুয়েলারি পৌঁছে দেওয়ার লক্ষ্য নিয়ে ১৯ মে, ২০২৬ সালে ARISAN BD-এর যাত্রা শুরু করেন। বর্তমানে তিনি ঢাকায় বসবাস করছেন এবং চাকরির পাশাপাশি উদ্যোক্তা হিসেবে নিজের স্বপ্ন বাস্তবায়নের পথে এগিয়ে চলেছেন।
+              </p>
+              <p>
+                তার বিশ্বাস, সৌন্দর্য ও স্টাইল সবার জন্য সহজলভ্য হওয়া উচিত। তাই ARISAN BD-এর প্রতিটি পণ্য বাছাই করা হয় গুণগত মান, আকর্ষণীয় ডিজাইন এবং ক্রেতার সন্তুষ্টিকে সর্বোচ্চ গুরুত্ব দিয়ে।
+              </p>
+              <p>
+                তার দীর্ঘমেয়াদি লক্ষ্য হলো ARISAN BD-কে বাংলাদেশের একটি বিশ্বস্ত ও জনপ্রিয় জুয়েলারি ব্র্যান্ড হিসেবে প্রতিষ্ঠিত করা, যা মানুষের আস্থা, ভালোবাসা এবং বিশ্বাস অর্জন করবে।
+              </p>
+            </EditableElement>
+            
+            <blockquote className="border-l-2 border-emerald-500 pl-4 py-1 text-xs italic text-emerald-300">
+              <EditableElement id="owner-blockquote" defaultText="At ARISAN BD, we believe..." defaultTextBn="তিনি বিশ্বাস করেন, সততা, গুণগত মান এবং গ্রাহকসেবাই একটি সফল ব্র্যান্ডের মূল ভিত্তি।">
+                "তিনি বিশ্বাস করেন, সততা, গুণগত মান এবং গ্রাহকসেবাই একটি সফল ব্র্যান্ডের মূল ভিত্তি। এই বিশ্বাস নিয়েই ARISAN BD প্রতিনিয়ত এগিয়ে যাচ্ছে নতুন সম্ভাবনার পথে।"
+              </EditableElement>
             </blockquote>
           </div>
         </div>
@@ -154,42 +180,71 @@ export const AboutOwnerView: React.FC = () => {
   return (
     <div className="container mx-auto px-4 lg:px-8 py-10 max-w-4xl space-y-12 text-left animate-fadeIn">
       <div className="space-y-4 text-center">
-        <span className="text-xs uppercase tracking-[0.25em] text-amber-400 font-semibold">Behind The Brand</span>
-        <h1 className="text-3xl md:text-5xl font-sans font-extrabold text-stone-100 tracking-tight">The Visionary Curator</h1>
-        <div className="w-16 h-0.5 bg-amber-400 mx-auto mt-3"></div>
+        <span className="text-xs uppercase tracking-[0.25em] text-emerald-400 font-semibold block">
+          <EditableElement id="owner-header-subtitle" defaultText="Behind The Brand" defaultTextBn="ব্র্যান্ডের নেপথ্যে">
+            Behind The Brand
+          </EditableElement>
+        </span>
+        <h1 className="text-3xl md:text-5xl font-sans font-extrabold text-stone-100 tracking-tight">
+          <EditableElement id="owner-header-title" defaultText="The Visionary Curator" defaultTextBn="আমাদের স্বপ্নদর্শী প্রতিষ্ঠাতা">
+            The Visionary Curator
+          </EditableElement>
+        </h1>
+        <div className="w-16 h-0.5 bg-emerald-500 mx-auto mt-3"></div>
       </div>
 
       <div className="bg-stone-950 border border-stone-900 rounded-xl p-8 grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
         <div className="md:col-span-1 text-center space-y-4">
           <div className="relative inline-block">
-            <img
-              src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=350&auto=format&fit=crop"
-              alt="Md Tarikul Alam Jesan"
-              className="w-48 h-48 object-cover rounded-full border-2 border-amber-400 mx-auto shadow-2xl"
-            />
+            <EditableElement id="owner-profile-image" type="image" defaultText="Md Tarikul Alam Jesan Image" style={{ borderRadius: '9999px', overflow: 'hidden' }}>
+              <img
+                src={photoSrc}
+                alt="Md Tarikul Alam Jesan"
+                className="w-48 h-48 object-cover rounded-full border-2 border-emerald-500 mx-auto shadow-2xl"
+                referrerPolicy="no-referrer"
+              />
+            </EditableElement>
             <span className="absolute bottom-2 right-6 bg-emerald-500 text-stone-950 font-bold px-3 py-0.5 rounded-full text-[9px] uppercase border border-stone-950 tracking-wider">FOUNDER</span>
           </div>
           <div>
-            <h3 className="text-lg font-bold text-stone-100">Md Tarikul Alam Jesan</h3>
-            <span className="text-xs text-amber-400 uppercase font-mono">Curator, Dhaka, Bangladesh</span>
+            <h3 className="text-lg font-bold text-stone-100 hover:text-white transition-colors">
+              <EditableElement id="owner-card-name" defaultText="Md Tarikul Alam Jesan" defaultTextBn="মোঃ তরিকুল আলম জিসান">
+                Md Tarikul Alam Jesan
+              </EditableElement>
+            </h3>
+            <span className="text-xs text-emerald-400 uppercase font-mono block">
+              <EditableElement id="owner-card-role" defaultText="Founder & CEO, ARISAN BD" defaultTextBn="প্রতিষ্ঠাতা ও পরিচালক, ARISAN BD">
+                Founder & CEO, ARISAN BD
+              </EditableElement>
+            </span>
           </div>
         </div>
 
         <div className="md:col-span-2 space-y-4 font-sans text-stone-300 text-sm leading-relaxed">
-          <p>
-            ARISAN BD was founded under the singular guidance of <strong className="text-stone-100">Md Tarikul Alam Jesan</strong>, an aesthetic visionary focused on building a transparent, elegant, and highly customer-oriented online e-commerce infrastructure in Bangladesh.
-          </p>
-          <p>
-            Understanding the trust gaps commonly associated with buying jewellery online in Bangladesh, Jesan introduced absolute quality checks. Every piece—from teardrop chokers to geometric studs—is inspected under loupes in our labs to verify that plating thicknesses and clasp lock systems comply with international standards.
-          </p>
-          <blockquote className="border-l-2 border-amber-400 pl-4 py-1 text-xs italic text-amber-300">
-            "ARISAN BD is not just an e-commerce platform. It is a modern fashion jewellery brand focused on premium style, elegance and trusted online shopping experience in Bangladesh. Our customers don't just dress up; they celebrate their heritage with pride under a label they can unequivocally trust."
+          <EditableElement id="owner-bio-content" defaultText="Md Tarikul Alam Jesan is the founder of ARISAN BD..." defaultTextBn="মোঃ তরিকুল আলম জিসান হলেন ARISAN BD-এর প্রতিষ্ঠাতা। বরিশালের একজন তরুণ উদ্যোক্তা হিসেবে তিনি...">
+            <p>
+              <strong className="text-stone-100">Md Tarikul Alam Jesan</strong> is the founder of ARISAN BD, a growing fashion jewellery brand dedicated to bringing elegance, quality, and affordability together. Originally from Barishal and currently based in Dhaka, he started ARISAN BD on May 19, 2026, with a simple vision: to make beautiful and high-quality jewellery accessible to everyone at reasonable prices.
+            </p>
+            <p>
+              As a job holder and entrepreneur, Jesan believes that style should never come at an unreasonable cost. His goal is to offer carefully selected jewellery pieces that combine modern trends, quality craftsmanship, and affordability.
+            </p>
+            <p>
+              With a passion for business and customer satisfaction, he dreams of building ARISAN BD into a trusted and recognized brand that earns the confidence and loyalty of customers across Bangladesh. Every step of the journey is driven by a commitment to quality, trust, and long-term customer relationships.
+            </p>
+          </EditableElement>
+          
+          <blockquote className="border-l-2 border-emerald-500 pl-4 py-1 text-xs italic text-emerald-300">
+            <EditableElement id="owner-blockquote" defaultText="At ARISAN BD, we believe that honesty, top-notch quality, and outstanding customer service form the true foundation of a successful brand." defaultTextBn="তিনি বিশ্বাস করেন, সততা, গুণগত মান এবং গ্রাহকসেবাই একটি সফল ব্র্যান্ডের মূল ভিত্তি।">
+              "At ARISAN BD, we believe that honesty, top-notch quality, and outstanding customer service form the true foundation of a successful brand."
+            </EditableElement>
           </blockquote>
         </div>
       </div>
     </div>
   );
 };
+
+
 
 
 // --- CONTACT US VIEW ---

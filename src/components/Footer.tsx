@@ -1,6 +1,7 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
 import { Phone, Mail, MapPin, Facebook, Instagram, MessageSquare, ChevronRight, HelpCircle, FileText, ArrowUp, ShieldAlert } from 'lucide-react';
+import { EditableElement } from './EditableElement';
 
 export const Footer: React.FC = () => {
   const { setActiveTab, settings } = useApp();
@@ -25,14 +26,20 @@ export const Footer: React.FC = () => {
         
         {/* BRAND STATEMENT */}
         <div>
-          <span className="text-xl font-display font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-yellow-200 to-amber-500 tracking-wider">
-            ARISAN BD
+          <span className="text-xl font-display font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-yellow-200 to-amber-500 tracking-wider block mb-1">
+            <EditableElement id="footer-brand-title" defaultText="ARISAN BD" defaultTextBn="আরিসান বিডি">
+              ARISAN BD
+            </EditableElement>
           </span>
           <p className="text-[10px] tracking-[0.25em] text-amber-300/80 uppercase mt-0.5">
-            {settings.tagline}
+            <EditableElement id="footer-tagline" defaultText={settings.tagline} defaultTextBn="সিম্পল লুক, প্রিমিয়াম জুয়েলারি">
+              {settings.tagline}
+            </EditableElement>
           </p>
           <p className="text-sm text-stone-400 mt-4 leading-relaxed font-sans">
-            ARISAN BD is a modern fashion jewellery brand focused on premium style, elegance and trusted online shopping experience in Bangladesh. Simple looks, styled for royalty.
+            <EditableElement id="footer-brand-desc" defaultText="ARISAN BD is a modern fashion jewellery brand focused on premium style..." defaultTextBn="আরিসান বিডি বাংলাদেশের অন্যতম বিশ্বস্ত প্রিমিয়াম গহনার অনলাইন স্টোর...">
+              ARISAN BD is a modern fashion jewellery brand focused on premium style, elegance and trusted online shopping experience in Bangladesh. Simple looks, styled for royalty.
+            </EditableElement>
           </p>
           <div className="mt-6 flex items-center gap-3">
             <a
@@ -79,7 +86,9 @@ export const Footer: React.FC = () => {
         {/* QUICK NAVIGATION LINKS */}
         <div>
           <h4 className="text-sm font-semibold text-stone-100 uppercase tracking-widest border-l-2 border-amber-400 pl-3 mb-6">
-            Quick Navigation
+            <EditableElement id="footer-section-quicknav" defaultText="Quick Navigation" defaultTextBn="সহজ নেভিগেশন">
+              Quick Navigation
+            </EditableElement>
           </h4>
           <ul className="space-y-3.5 text-sm font-sans">
             <li>
@@ -133,7 +142,9 @@ export const Footer: React.FC = () => {
         {/* CUSTOMER CARE */}
         <div>
           <h4 className="text-sm font-semibold text-stone-100 uppercase tracking-widest border-l-2 border-amber-400 pl-3 mb-6">
-            Customer Care
+            <EditableElement id="footer-section-care" defaultText="Customer Care" defaultTextBn="গ্রাহক সেবা">
+              Customer Care
+            </EditableElement>
           </h4>
           <ul className="space-y-3.5 text-sm font-sans">
             <li>
@@ -188,7 +199,9 @@ export const Footer: React.FC = () => {
         {/* DIRECT SUPPORT CHANNELS */}
         <div>
           <h4 className="text-sm font-semibold text-stone-100 uppercase tracking-widest border-l-2 border-amber-400 pl-3 mb-6">
-            Support Channels
+            <EditableElement id="footer-section-support" defaultText="Support Channels" defaultTextBn="সহায়তা মাধ্যমসমূহ">
+              Support Channels
+            </EditableElement>
           </h4>
           <ul className="space-y-4 text-xs md:text-sm font-sans">
             <li className="flex items-start gap-3">
@@ -238,14 +251,18 @@ export const Footer: React.FC = () => {
             </span>
             <span className="hidden md:inline text-stone-800">|</span>
             <span>
-              Founder: <strong className="text-stone-100 font-medium">Md Tarikul Alam Jesan</strong>, Bangladesh.
+              <EditableElement id="footer-section-founder" defaultText="Founder: Md Tarikul Alam Jesan, Bangladesh." defaultTextBn="প্রতিষ্ঠাতা: মোঃ তরিকুল আলম জিসান, বাংলাদেশ।">
+                Founder: <strong className="text-stone-100 font-medium">Md Tarikul Alam Jesan</strong>, Bangladesh.
+              </EditableElement>
             </span>
           </div>
 
           {/* Secure badging icons */}
           <div className="flex items-center gap-4 text-[10px] uppercase font-mono tracking-wider text-stone-400 bg-stone-950 px-3.5 py-1.5 rounded-full border border-stone-900/40">
-            <span className="text-emerald-500 font-bold">&#9679;</span> SECURE CHECKOUT (BDT)
-            <span className="text-amber-400 font-bold">&#9679;</span> CASH ON DELIVERY
+            <EditableElement id="footer-section-badges" defaultText="SECURE CHECKOUT - CASH ON DELIVERY" defaultTextBn="নিরাপদ চেকআউট - ক্যাশ অন ডেলিভারি">
+              <span className="text-emerald-500 font-bold">&#9679;</span> SECURE CHECKOUT (BDT)
+              <span className="text-amber-400 font-bold ml-2">&#9679;</span> CASH ON DELIVERY
+            </EditableElement>
           </div>
 
         </div>

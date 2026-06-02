@@ -4,6 +4,7 @@ import { ProductCard } from '../components/ProductCard';
 import { ArrowRight, Sparkles, Star, ShieldCheck, Truck, RotateCcw, Award, Mail, Clock } from 'lucide-react';
 import { getTranslatedCategoryName } from '../utils/translations';
 import { StyledText } from '../components/StyledText';
+import { EditableElement } from '../components/EditableElement';
 
 export const HomeView: React.FC = () => {
   const { products, categories, settings, reviews, setActiveTab, setSelectedCategorySlug, language, t } = useApp();
@@ -38,12 +39,14 @@ export const HomeView: React.FC = () => {
       >
         {/* Background Visual Layer */}
         <div className="absolute inset-0 z-0 opacity-40">
-          <img
-            src={settings.heroImage}
-            alt="ARISAN BD Luxury Jewellery"
-            className="w-full h-full object-cover filter brightness-50 contrast-110 referrer-no-referrer"
-            referrerPolicy="no-referrer"
-          />
+          <EditableElement id="hero-bg-image" type="image" defaultText="Background Visual Banner" style={{ width: '100%', height: '100%', objectFit: 'cover' }}>
+            <img
+              src={settings.heroImage}
+              alt="ARISAN BD Luxury Jewellery"
+              className="w-full h-full object-cover filter brightness-50 contrast-110 referrer-no-referrer"
+              referrerPolicy="no-referrer"
+            />
+          </EditableElement>
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/80 to-transparent"></div>
         </div>
 
@@ -52,35 +55,53 @@ export const HomeView: React.FC = () => {
         <div className="absolute bottom-1/4 right-1/4 w-72 h-72 bg-emerald-500/5 rounded-full filter blur-3xl animate-pulse delay-700"></div>
 
         <div className="container mx-auto px-4 lg:px-8 relative z-10 space-y-6 max-w-4xl">
-          <span className="text-amber-400 font-sans tracking-[0.3em] text-xs md:text-sm uppercase font-semibold flex items-center justify-center gap-2">
-            <Sparkles className="w-4 h-4 text-amber-400 animate-spin" />
-            {language === 'bn' ? 'সিম্পল লুক, প্রিমিয়াম জুয়েলারি' : 'Simple Look, Premium Jewellery'}
-          </span>
+          <div className="text-amber-400 font-sans tracking-[0.3em] text-xs md:text-sm uppercase font-semibold flex items-center justify-center gap-2">
+            <EditableElement id="hero-spark-label" defaultText="Simple Look, Premium Jewellery" defaultTextBn="সিম্পল লুক, প্রিমিয়াম জুয়েলারি">
+              <Sparkles className="w-4 h-4 text-amber-400 animate-spin inline" />
+              <span>{language === 'bn' ? 'সিম্পল লুক, প্রিমিয়াম জুয়েলারি' : 'Simple Look, Premium Jewellery'}</span>
+            </EditableElement>
+          </div>
+          
           <h1 className="text-4xl sm:text-5xl md:text-7xl font-sans font-extrabold tracking-tight leading-tight">
-            {language === 'bn' && settings.heroHeadline?.includes('Crafted Elegance')
-              ? 'প্রতিটি মুহূর্তের জন্য অভিজাত জুয়েলারি'
-              : <StyledText text={settings.heroHeadline} />}
+            <EditableElement id="hero-headline" defaultText={settings.heroHeadline} defaultTextBn="প্রতিটি মুহূর্তের জন্য অভিজাত জুয়েলারি">
+              {language === 'bn' && settings.heroHeadline?.includes('Crafted Elegance')
+                ? 'প্রতিটি মুহূর্তের জন্য অভিজাত জুয়েলারি'
+                : <StyledText text={settings.heroHeadline} />}
+            </EditableElement>
           </h1>
+
           <p className="text-sm md:text-lg leading-relaxed max-w-2xl mx-auto font-sans opacity-90">
-            {language === 'bn' && settings.heroSubheadline?.includes('ARISAN BD presents')
-              ? 'ARISAN BD নিয়ে এসেছে অত্যন্ত প্রিমিয়াম এবং ট্রেন্ডি ফ্যাশন জুয়েলারি কালেকশন, যা আপনার প্রতিদিনের সাধারণ রূপকেও করে তুলবে অনন্য এবং রাজকীয়।'
-              : <StyledText text={settings.heroSubheadline} />}
+            <EditableElement id="hero-subheadline" defaultText={settings.heroSubheadline} defaultTextBn="ARISAN BD নিয়ে এসেছে অত্যন্ত প্রিমিয়াম এবং ট্রেন্ডি ফ্যাশন জুয়েলারি কালেকশন...">
+              {language === 'bn' && settings.heroSubheadline?.includes('ARISAN BD presents')
+                ? 'ARISAN BD নিয়ে এসেছে অত্যন্ত প্রিমিয়াম এবং ট্রেন্ডি ফ্যাশন জুয়েলারি কালেকশন, যা আপনার প্রতিদিনের সাধারণ রূপকেও করে তুলবে অনন্য এবং রাজকীয়।'
+                : <StyledText text={settings.heroSubheadline} />}
+            </EditableElement>
           </p>
+
           <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button
-              onClick={() => { setSelectedCategorySlug(null); setActiveTab('shop'); }}
-              className="w-full sm:w-auto btn-luxury-cta px-8 py-3.5 font-bold uppercase text-xs tracking-widest flex items-center justify-center gap-2 cursor-pointer shadow-lg active:scale-98"
-              style={{ backgroundColor: settings.buttonBgColor, color: settings.buttonTextColor }}
-            >
-              <span>{language === 'bn' ? 'সব কালেকশন দেখুন' : 'Explore Curation'}</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setActiveTab('about-us')}
-              className="w-full sm:w-auto min-w-[200px] bg-stone-900/80 text-stone-100 border border-stone-850 hover:border-amber-400/50 px-8 py-3.5 rounded font-bold uppercase text-xs tracking-widest transition-colors cursor-pointer"
-            >
-              {language === 'bn' ? 'আমাদের হেরিটেজ গল্প' : 'Our Heritage Story'}
-            </button>
+            <div className="w-full sm:w-auto">
+              <EditableElement id="hero-cta-primary" type="button" className="w-full">
+                <button
+                  onClick={() => { setSelectedCategorySlug(null); setActiveTab('shop'); }}
+                  className="w-full sm:w-auto btn-luxury-cta px-8 py-3.5 font-bold uppercase text-xs tracking-widest flex items-center justify-center gap-2 cursor-pointer shadow-lg active:scale-98"
+                  style={{ backgroundColor: settings.buttonBgColor, color: settings.buttonTextColor }}
+                >
+                  <span>{language === 'bn' ? 'সব কালেকশন দেখুন' : 'Explore Curation'}</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </EditableElement>
+            </div>
+
+            <div className="w-full sm:w-auto">
+              <EditableElement id="hero-cta-secondary" type="button" className="w-full">
+                <button
+                  onClick={() => setActiveTab('about-us')}
+                  className="w-full sm:w-auto min-w-[200px] bg-stone-900/80 text-stone-100 border border-stone-850 hover:border-amber-400/50 px-8 py-3.5 rounded font-bold uppercase text-xs tracking-widest transition-colors cursor-pointer"
+                >
+                  {language === 'bn' ? 'আমাদের হেরিটেজ গল্প' : 'Our Heritage Story'}
+                </button>
+              </EditableElement>
+            </div>
           </div>
         </div>
       </section>
@@ -97,10 +118,14 @@ export const HomeView: React.FC = () => {
             </div>
             <div>
               <h4 className="text-sm font-semibold text-stone-100">
-                {language === 'bn' ? 'সারাদেশে ডেলিভারি' : 'Across Bangladesh Delivery'}
+                <EditableElement id="val-1-title" defaultText="Across Bangladesh Delivery" defaultTextBn="সারাদেশে ডেলিভারি">
+                  {language === 'bn' ? 'সারাদেশে ডেলিভারি' : 'Across Bangladesh Delivery'}
+                </EditableElement>
               </h4>
               <p className="text-xs text-stone-400 mt-1">
-                {language === 'bn' ? 'সারা বাংলাদেশে অত্যন্ত দ্রুত গতিতে ক্যাশ অন ডেলিভারি সুবিধা।' : 'Superfast home delivery with secure cash on delivery option.'}
+                <EditableElement id="val-1-desc" defaultText="Superfast home delivery with secure cash on delivery option." defaultTextBn="সারা বাংলাদেশে অত্যন্ত দ্রুত গতিতে ক্যাশ অন ডেলিভারি সুবিধা।">
+                  {language === 'bn' ? 'সারা বাংলাদেশে অত্যন্ত দ্রুত গতিতে ক্যাশ অন ডেলিভারি সুবিধা।' : 'Superfast home delivery with secure cash on delivery option.'}
+                </EditableElement>
               </p>
             </div>
           </div>
@@ -110,10 +135,14 @@ export const HomeView: React.FC = () => {
             </div>
             <div>
               <h4 className="text-sm font-semibold text-stone-100">
-                {language === 'bn' ? 'শতভাগ প্রিমিয়াম কোয়ালিটি' : 'Guaranteed Premium Quality'}
+                <EditableElement id="val-2-title" defaultText="Guaranteed Premium Quality" defaultTextBn="শতভাগ প্রিমিয়াম কোয়ালিটি">
+                  {language === 'bn' ? 'শতভাগ প্রিমিয়াম কোয়ালিটি' : 'Guaranteed Premium Quality'}
+                </EditableElement>
               </h4>
               <p className="text-xs text-stone-400 mt-1">
-                {language === 'bn' ? 'আমাদের প্রতিটি প্রোডাক্ট ১৮কে বা ২২কে গোল্ড প্লেটেড এবং মানসম্মত।' : 'Every premium gem and 18K/22K plating passes strict control.'}
+                <EditableElement id="val-2-desc" defaultText="Every premium gem and 18K/22K plating passes strict control." defaultTextBn="আমাদের প্রতিটি প্রোডাক্ট ১৮কে বা ২২কে গোল্ড প্লেটেড এবং মানসম্মত।">
+                  {language === 'bn' ? 'আমাদের প্রতিটি প্রোডাক্ট ১৮কে বা ২২কে গোল্ড প্লেটেড এবং মানসম্মত।' : 'Every premium gem and 18K/22K plating passes strict control.'}
+                </EditableElement>
               </p>
             </div>
           </div>
@@ -123,10 +152,14 @@ export const HomeView: React.FC = () => {
             </div>
             <div>
               <h4 className="text-sm font-semibold text-stone-100">
-                {language === 'bn' ? 'সহজ ৭-দিন এক্সচেঞ্জ' : 'Simple 7-Day Exchange'}
+                <EditableElement id="val-3-title" defaultText="Simple 7-Day Exchange" defaultTextBn="সহজ ৭-দিন এক্সচেঞ্জ">
+                  {language === 'bn' ? 'সহজ ৭-দিন এক্সচেঞ্জ' : 'Simple 7-Day Exchange'}
+                </EditableElement>
               </h4>
               <p className="text-xs text-stone-400 mt-1">
-                {language === 'bn' ? 'পণ্য পছন্দ না হলে বা সাইজে সমস্যা হলে ৭ দিনের মধ্যে এক্সচেঞ্জ সুবিধা।' : 'Not fully satisfied? Exchange easily through support hub.'}
+                <EditableElement id="val-3-desc" defaultText="Not fully satisfied? Exchange easily through support hub." defaultTextBn="পণ্য পছন্দ না হলে বা সাইজে সমস্যা হলে ৭ দিনের মধ্যে এক্সচেঞ্জ সুবিধা।">
+                  {language === 'bn' ? 'পণ্য পছন্দ না হলে বা সাইজে সমস্যা হলে ৭ দিনের মধ্যে এক্সচেঞ্জ সুবিধা।' : 'Not fully satisfied? Exchange easily through support hub.'}
+                </EditableElement>
               </p>
             </div>
           </div>
@@ -136,10 +169,14 @@ export const HomeView: React.FC = () => {
             </div>
             <div>
               <h4 className="text-sm font-semibold text-stone-100">
-                {language === 'bn' ? 'প্রতিষ্ঠাতা নির্বাচিত জুয়েলারি' : 'Owner-Curated Jewels'}
+                <EditableElement id="val-4-title" defaultText="Owner-Curated Jewels" defaultTextBn="প্রতিষ্ঠাতা নির্বাচিত জুয়েলারি">
+                  {language === 'bn' ? 'প্রতিষ্ঠাতা নির্বাচিত জুয়েলারি' : 'Owner-Curated Jewels'}
+                </EditableElement>
               </h4>
               <p className="text-xs text-stone-400 mt-1">
-                {language === 'bn' ? 'জেসান কর্তৃক সরাসরি বাছাইকৃত অত্যন্ত প্রিমিয়াম জুয়েলারি ডিজাইন।' : 'Hand-selected designs by Md Tarikul Alam Jesan.'}
+                <EditableElement id="val-4-desc" defaultText="Hand-selected designs by Md Tarikul Alam Jesan." defaultTextBn="জেসান কর্তৃক সরাসরি বাছাইকৃত অত্যন্ত প্রিমিয়াম জুয়েলারি ডিজাইন।">
+                  {language === 'bn' ? 'জেসান কর্তৃক সরাসরি বাছাইকৃত অত্যন্ত প্রিমিয়াম জুয়েলারি ডিজাইন।' : 'Hand-selected designs by Md Tarikul Alam Jesan.'}
+                </EditableElement>
               </p>
             </div>
           </div>
@@ -152,11 +189,15 @@ export const HomeView: React.FC = () => {
         style={{ backgroundColor: settings.categoriesBgColor, color: settings.categoriesTextColor }}
       >
         <div className="space-y-2">
-          <span className="text-[10px] uppercase tracking-[0.25em] font-sans text-amber-400 font-semibold">
-            {language === 'bn' ? 'প্রিমিয়াম ক্যাটাগরি' : 'Luxury Categories'}
+          <span className="text-[10px] uppercase tracking-[0.25em] font-sans text-amber-400 font-semibold block">
+            <EditableElement id="cat-section-subtitle" defaultText="Luxury Categories" defaultTextBn="প্রিমিয়াম ক্যাটাগরি">
+              {language === 'bn' ? 'প্রিমিয়াম ক্যাটাগরি' : 'Luxury Categories'}
+            </EditableElement>
           </span>
           <h2 className="text-2xl md:text-4xl font-sans font-bold" style={{ color: settings.categoriesTextColor }}>
-            {language === 'bn' ? 'রয়াল ক্যাটাগরি অনুযায়ী অনুসন্ধান' : 'Shop by Royal Category'}
+            <EditableElement id="cat-section-title" defaultText="Shop by Royal Category" defaultTextBn="রয়াল ক্যাটাগরি অনুযায়ী অনুসন্ধান">
+              {language === 'bn' ? 'রয়াল ক্যাটাগরি অনুযায়ী অনুসন্ধান' : 'Shop by Royal Category'}
+            </EditableElement>
           </h2>
           <div className="w-16 h-0.5 bg-amber-400 mx-auto mt-2"></div>
         </div>
@@ -275,7 +316,7 @@ export const HomeView: React.FC = () => {
           <div className="w-16 h-0.5 bg-amber-400 mx-auto mt-2"></div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
           {featuredProducts.map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}
@@ -297,7 +338,7 @@ export const HomeView: React.FC = () => {
           <div className="w-16 h-0.5 bg-amber-400 mx-auto mt-2"></div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
           {bestSellers.map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}
@@ -319,7 +360,7 @@ export const HomeView: React.FC = () => {
           <div className="w-16 h-0.5 bg-amber-400 mx-auto mt-2"></div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
           {newArrivals.map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}

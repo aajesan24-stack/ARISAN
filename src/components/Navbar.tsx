@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext';
 import { Search, ShoppingBag, User, Heart, Menu, X, LogIn, ChevronDown, Compass, ShieldAlert, BookOpen, Settings } from 'lucide-react';
 import { StyledText } from './StyledText';
 import { BANGLADESH_DISTRICTS } from '../types';
+import { EditableElement } from './EditableElement';
 
 export const Navbar: React.FC = () => {
   const {
@@ -100,9 +101,11 @@ export const Navbar: React.FC = () => {
         <div className="container mx-auto flex justify-center items-center gap-2 overflow-hidden">
           <span className="inline-block animate-pulse">✨</span>
           <span className="text-white hover:text-amber-300 font-sans tracking-wide">
-            {language === 'bn' && settings.announcementText?.includes('FREE Express Home Delivery')
-              ? '✨ ৩,০০০ টাকার বেশি অর্ডারে সারা বাংলাদেশে ফ্রী ক্যাশ অন ডেলিভারি! ✨'
-              : <StyledText text={settings.announcementText} />}
+            <EditableElement id="header-ticker" defaultText={settings.announcementText} defaultTextBn="✨ ৩,০০০ টাকার বেশি অর্ডারে সারা বাংলাদেশে ফ্রী ক্যাশ অন ডেলিভারি! ✨">
+              {language === 'bn' && settings.announcementText?.includes('FREE Express Home Delivery')
+                ? '✨ ৩,০০০ টাকার বেশি অর্ডারে সারা বাংলাদেশে ফ্রী ক্যাশ অন ডেলিভারি! ✨'
+                : <StyledText text={settings.announcementText} />}
+            </EditableElement>
           </span>
           <span className="inline-block animate-pulse">✨</span>
         </div>
@@ -120,12 +123,16 @@ export const Navbar: React.FC = () => {
                 className="group flex flex-col items-start cursor-pointer text-left focus:outline-none shrink-0"
                 id="brand-logo"
               >
-                <span className="text-xl sm:text-2xl md:text-3xl font-display uppercase tracking-widest font-extrabold text-stone-100 group-hover:opacity-95 transition-all whitespace-nowrap">
-                  <span className="text-amber-400">ARISAN</span> BD
-                </span>
-                <span className="text-[8px] sm:text-[9px] md:text-[10px] tracking-[0.2em] sm:tracking-[0.25em] text-[var(--theme-header-text)]/90 font-semibold font-sans uppercase whitespace-nowrap">
-                  {settings.tagline}
-                </span>
+                <div className="text-xl sm:text-2xl md:text-3xl font-display uppercase tracking-widest font-extrabold text-[var(--theme-header-text)] group-hover:opacity-95 transition-all whitespace-nowrap">
+                  <EditableElement id="brand-logo-text" defaultText="ARISAN BD" defaultTextBn="আরিসান বিডি">
+                    <span className="text-amber-400">ARISAN</span> BD
+                  </EditableElement>
+                </div>
+                <div className="text-[8px] sm:text-[9px] md:text-[10px] tracking-[0.2em] sm:tracking-[0.25em] text-[var(--theme-header-text)]/90 font-semibold font-sans uppercase whitespace-nowrap">
+                  <EditableElement id="brand-tagline-text" defaultText={settings.tagline} defaultTextBn="কোমল স্পর্শে প্রিমিয়াম জুয়েলারি">
+                    {settings.tagline}
+                  </EditableElement>
+                </div>
               </button>
             </div>
 
@@ -266,7 +273,7 @@ export const Navbar: React.FC = () => {
               >
                 <ShoppingBag className="w-5.5 h-5.5 text-[var(--theme-header-text)] group-hover:text-[var(--theme-header-text)] transition-colors" />
                 {getCartItemCount() > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-white text-[var(--theme-header-bg)] font-bold font-mono text-[9px] w-5 h-5 rounded-full flex items-center justify-center border border-[var(--theme-header-bg)] shadow-lg">
+                  <span className="absolute -top-1 -right-1 bg-amber-400 text-stone-950 font-black font-mono text-[9px] w-5 h-5 rounded-full flex items-center justify-center border border-amber-500/20 shadow-lg">
                     {getCartItemCount()}
                   </span>
                 )}

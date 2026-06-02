@@ -3,6 +3,8 @@ import { AppProvider, useApp } from './context/AppContext';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { LiveChat } from './components/LiveChat';
+import { VisualCustomizerModal } from './components/VisualCustomizerModal';
+import { VisualEditorToolbar } from './components/VisualEditorToolbar';
 
 // Views
 import { HomeView } from './views/HomeView';
@@ -209,6 +211,10 @@ function AppContent() {
 
       {/* 3. SIMULATED FLOATING WHATSAPP CHAT ADVISORS */}
       <LiveChat />
+
+      {/* Visual Customizer Suite Admin Control elements */}
+      <VisualCustomizerModal />
+      <VisualEditorToolbar />
 
       {/* 4. LUXURY EMBRACING BRAND FOOTER */}
       <Footer />

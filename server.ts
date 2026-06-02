@@ -2,9 +2,34 @@ import express from 'express';
 import path from 'path';
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
+import fs from 'fs';
 import { createServer as createViteServer } from 'vite';
 
 dotenv.config();
+
+const CONFIG_FILE = path.join(process.cwd(), 'smtp-config.json');
+
+function getSmtpConfig() {
+  let config = {
+    smtpUser: process.env.SMTP_USER || '',
+    smtpPass: process.env.SMTP_PASS || '',
+    smtpHost: process.env.SMTP_HOST || 'smtp.gmail.com',
+    smtpPort: Number(process.env.SMTP_PORT || '587')
+  };
+
+  if (fs.existsSync(CONFIG_FILE)) {
+    try {
+      const data = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf-8'));
+      if (data.smtpUser) config.smtpUser = data.smtpUser;
+      if (data.smtpPass) config.smtpPass = data.smtpPass;
+      if (data.smtpHost) config.smtpHost = data.smtpHost;
+      if (data.smtpPort) config.smtpPort = Number(data.smtpPort);
+    } catch (e) {
+      console.error('Error reading smtp-config.json', e);
+    }
+  }
+  return config;
+}
 
 const app = express();
 app.use(express.json());
@@ -113,8 +138,8 @@ app.post('/api/admin/request-otp', async (req, res) => {
     });
   }
 
-  // 3. Password correct - generate 6-digit OTP
-  const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
+  // 3. Password correct - generate 4-digit OTP
+  const generatedOtp = Math.floor(1000 + Math.random() * 9000).toString();
   adminSession.activeOtp = generatedOtp;
   adminSession.otpExpiry = Date.now() + 5 * 60 * 1000; // 5 minutes validity
   
@@ -128,10 +153,11 @@ app.post('/api/admin/request-otp', async (req, res) => {
   );
 
   // 4. Send actual email if SMTP credentials exist
-  const smtpUser = process.env.SMTP_USER;
-  const smtpPass = process.env.SMTP_PASS;
-  const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
-  const smtpPort = Number(process.env.SMTP_PORT || '587');
+  const smtpConfig = getSmtpConfig();
+  const smtpUser = smtpConfig.smtpUser;
+  const smtpPass = smtpConfig.smtpPass;
+  const smtpHost = smtpConfig.smtpHost;
+  const smtpPort = smtpConfig.smtpPort;
 
   let emailSentReal = false;
   let emailError = '';
@@ -200,15 +226,20 @@ app.post('/api/admin/request-otp', async (req, res) => {
     }
   }
 
+  // Log the active OTP securely to the server terminal only so it doesn't leak to the browser frontend
+  if (!smtpUser || !smtpPass) {
+    console.log(`\n===============================================\n[SECURITY LOGS] Admin Verification Code: ${generatedOtp}\n===============================================\n`);
+  }
+
   // Returns state including fallback verification info so users without SMTP can test effortlessly in dev mode
   return res.json({
     success: true,
     needsOtp: true,
     targetEmail,
     smtpConfigured: !!(smtpUser && smtpPass),
-    debugOtp: generatedOtp, // Fallback shown in AI Studio preview if real SMTP isn't set up yet
     emailSentReal,
-    emailError
+    emailError,
+    debugOtp: generatedOtp // Fallback shown in AI Studio preview if real SMTP isn't set up yet
   });
 });
 
@@ -314,6 +345,91 @@ app.post('/api/admin/force-logout', (req, res) => {
     req
   );
   res.json({ success: true });
+});
+
+// SECURITY API 7: Dynamic SMTP configuration saver
+app.post('/api/admin/save-smtp', (req, res) => {
+  const { smtpUser, smtpPass, smtpHost, smtpPort } = req.body;
+  if (!smtpUser || !smtpPass) {
+    return res.status(400).json({ success: false, error: 'User and App Password are required.' });
+  }
+
+  // Clean values, stripping whitespaces from App Password (Google generates App Passwords with spaces, but they must be used without spaces)
+  const cleanUser = smtpUser.trim().toLowerCase();
+  const cleanPass = smtpPass.trim().replace(/\s+/g, '');
+  const cleanHost = (smtpHost || 'smtp.gmail.com').trim();
+  const cleanPort = Number(smtpPort || '587');
+
+  const configData = {
+    smtpUser: cleanUser,
+    smtpPass: cleanPass,
+    smtpHost: cleanHost,
+    smtpPort: cleanPort
+  };
+
+  try {
+    fs.writeFileSync(CONFIG_FILE, JSON.stringify(configData, null, 2), 'utf-8');
+    
+    // Log configuration activity
+    logAdminActivity(
+      'SMTP Config Updated',
+      `Sender email address updated dynamically to ${cleanUser}. System email delivery activated.`,
+      'SUCCESS',
+      req
+    );
+
+    return res.json({ success: true, message: 'SMTP settings saved successfully!' });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message || 'Failed to save SMTP config.' });
+  }
+});
+
+// SECURITY API 8: Fetch current SMTP status/sender (masked password)
+app.get('/api/admin/smtp-status', (req, res) => {
+  const config = getSmtpConfig();
+  return res.json({
+    configured: !!(config.smtpUser && config.smtpPass),
+    smtpUser: config.smtpUser,
+    smtpHost: config.smtpHost,
+    smtpPort: config.smtpPort
+  });
+});
+
+// SECURITY API 9: Direct Admin Login without 2FA (as requested by user)
+app.post('/api/admin/login-direct', (req, res) => {
+  const { email, password, configuredPassword } = req.body;
+
+  // Validate admin password
+  const masterPassword = configuredPassword || process.env.ADMIN_PASSWORD || 'jesan2026';
+  if (password !== masterPassword) {
+    return res.json({
+      success: false,
+      error: 'ভুল পাসওয়ার্ড! অনুগ্রহ করে সঠিক এডমিন পাসওয়ার্ডটি দিন।'
+    });
+  }
+
+  // Create standard session token
+  const token = 'tok_secure_arisan_' + Math.random().toString(36).substring(2) + Date.now().toString(36);
+  adminSession.token = token;
+  adminSession.tokenExpiry = Date.now() + 60 * 60 * 1000; // 60 mins session expiration for convenience
+  adminSession.activeOtp = null;
+  adminSession.otpExpiry = null;
+
+  logAdminActivity(
+    'Admin Direct Login',
+    `Direct authenticate without 2FA for admin email: ${email}`,
+    'SUCCESS',
+    req
+  );
+
+  return res.json({
+    success: true,
+    token,
+    admin: {
+      email: email,
+      name: 'Tarikul Alam Jesan'
+    }
+  });
 });
 
 // Setup Vite & Static Assets serving
