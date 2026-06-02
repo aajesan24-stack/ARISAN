@@ -247,7 +247,7 @@ export const Footer: React.FC = () => {
           
           <div className="flex flex-col md:flex-row items-center gap-4 text-center md:text-left">
             <span>
-              &copy; 2026 <strong className="text-amber-400">ARISAN BD</strong>. All Rights Reserved.
+              &copy; 2026 <strong className="text-emerald-500">ARISAN</strong> <strong className="text-amber-400">BD</strong>. All Rights Reserved.
             </span>
             <span className="hidden md:inline text-stone-800">|</span>
             <span>

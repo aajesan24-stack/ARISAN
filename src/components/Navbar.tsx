@@ -125,7 +125,7 @@ export const Navbar: React.FC = () => {
               >
                 <div className="text-xl sm:text-2xl md:text-3xl font-display uppercase tracking-widest font-extrabold text-[var(--theme-header-text)] group-hover:opacity-95 transition-all whitespace-nowrap">
                   <EditableElement id="brand-logo-text" defaultText="ARISAN BD" defaultTextBn="আরিসান বিডি">
-                    <span className="text-amber-400">ARISAN</span> BD
+                    <span className="text-emerald-600">ARISAN</span> <span className="text-amber-400">BD</span>
                   </EditableElement>
                 </div>
                 <div className="text-[8px] sm:text-[9px] md:text-[10px] tracking-[0.2em] sm:tracking-[0.25em] text-[var(--theme-header-text)]/90 font-semibold font-sans uppercase whitespace-nowrap">

@@ -155,7 +155,7 @@ export const EditableElement: React.FC<EditableElementProps> = ({
       const mergedClassName = `${childProps.className || ''} ${className} ${animationClass}`.trim();
       
       let newChildren = childProps.children;
-      if (hasCustomText || activeText) {
+      if (hasCustomText || (activeText && !childProps.children)) {
         newChildren = (
           <>
             {iconNode}
@@ -185,7 +185,7 @@ export const EditableElement: React.FC<EditableElementProps> = ({
           className={`${className} ${animationClass} flex items-center justify-center gap-2 transition-all`}
         >
           {iconNode}
-          <span>{hasCustomText || activeText ? activeText : children}</span>
+          <span>{hasCustomText ? activeText : (children ?? activeText)}</span>
         </button>
       );
     }
@@ -196,7 +196,7 @@ export const EditableElement: React.FC<EditableElementProps> = ({
         className={`${className} ${animationClass} flex items-center gap-2`}
       >
         {iconNode}
-        <span>{hasCustomText || activeText ? activeText : children}</span>
+        <span>{hasCustomText ? activeText : (children ?? activeText)}</span>
       </span>
     );
   };
