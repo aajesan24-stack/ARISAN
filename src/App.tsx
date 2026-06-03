@@ -5,6 +5,7 @@ import { Footer } from './components/Footer';
 import { LiveChat } from './components/LiveChat';
 import { VisualCustomizerModal } from './components/VisualCustomizerModal';
 import { VisualEditorToolbar } from './components/VisualEditorToolbar';
+import { PopupAdminDashboard } from './components/PopupAdminDashboard';
 
 // Views
 import { HomeView } from './views/HomeView';
@@ -214,6 +215,7 @@ function AppContent() {
 
       {/* Visual Customizer Suite Admin Control elements */}
       <VisualCustomizerModal />
+      <PopupAdminDashboard />
       <VisualEditorToolbar />
 
       {/* 4. LUXURY EMBRACING BRAND FOOTER */}

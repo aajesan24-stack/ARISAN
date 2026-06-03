@@ -5,7 +5,7 @@ import {
   Plus, Edit, Trash2, Check, ShieldAlert, Award, FileText, Settings, 
   ShoppingBag, BarChart3, Users, DollarSign, ArrowUpRight, ChevronDown, 
   BookOpen, Compass, Key, Lock, Activity, ShieldCheck, Mail, AlertTriangle, 
-  RefreshCw, LogOut, Laptop, Smartphone, Database
+  RefreshCw, LogOut, Laptop, Smartphone, Database, Sparkles
 } from 'lucide-react';
 import { checkSupabaseHealth, SUPABASE_SQL_SCHEMA, SupabaseHealth } from '../lib/supabase';
 
@@ -1478,112 +1478,200 @@ export const AdminDashboardView: React.FC = () => {
                 </thead>
                 <tbody className="divide-y divide-stone-900">
                   {orders.map((o) => (
-                    <tr key={o.id} className="hover:bg-stone-900/40">
-                      <td className="p-4 space-y-2">
-                        <div>
-                          <strong className="block text-amber-400 font-mono text-sm uppercase">{o.id}</strong>
-                          <span className="text-[10px] text-stone-500 font-mono">Locked: {new Date(o.createdAt).toLocaleString()}</span>
-                        </div>
-                        {/* Summary items list */}
-                        <div className="text-[10px] text-stone-400 space-y-0.5">
-                          {o.items.map((it, idx) => (
-                            <div key={idx}>- {it.title} ({it.quantity}x)</div>
-                          ))}
-                        </div>
-                      </td>
-                      <td className="p-4 space-y-1">
-                        <span className="block text-stone-250 font-semibold">{o.customerName}</span>
-                        <span className="block text-[10px] text-stone-450 font-mono">{o.phone}</span>
-                        <span className="block text-[10px] text-stone-400">{o.address}, {o.city}, {o.district}</span>
-                        {o.deliveryOption && (
-                          <span className="inline-block mt-1 bg-stone-950 px-2 py-0.5 rounded text-[9px] text-amber-400 border border-stone-850">
-                            🚚 {o.deliveryOption}
-                          </span>
-                        )}
-                      </td>
-                      <td className="p-4 space-y-2">
-                        <div>
-                          <span className="block text-emerald-400 font-bold font-mono text-sm leading-none">৳{o.total.toLocaleString()} BDT</span>
-                          <span className="block text-[9px] text-stone-400 mt-1 uppercase font-semibold">{o.paymentMethod}</span>
-                        </div>
-                        
-                        {/* Render Payment Screenshot Proof and Transaction ID if exists */}
-                        <div className="space-y-1.5 pt-0.5">
-                          {o.transactionId && (
-                            <div className="text-[10px] font-mono text-stone-300">
-                              <span className="text-stone-500">TrxID:</span> <span className="select-all bg-stone-950 px-1 rounded">{o.transactionId}</span>
-                            </div>
+                    <React.Fragment key={o.id}>
+                      <tr className="hover:bg-stone-900/40">
+                        <td className="p-4 space-y-2">
+                          <div>
+                            <strong className="block text-amber-400 font-mono text-sm uppercase">{o.id}</strong>
+                            <span className="text-[10px] text-stone-500 font-mono">Locked: {new Date(o.createdAt).toLocaleString()}</span>
+                          </div>
+                          {/* Summary items list */}
+                          <div className="text-[10px] text-stone-400 space-y-0.5">
+                            {o.items.map((it, idx) => (
+                              <div key={idx}>- {it.title} ({it.quantity}x)</div>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="p-4 space-y-1">
+                          <span className="block text-stone-250 font-semibold">{o.customerName}</span>
+                          <span className="block text-[10px] text-stone-450 font-mono">{o.phone}</span>
+                          <span className="block text-[10px] text-stone-400">{o.address}, {o.city}, {o.district}</span>
+                          {o.deliveryOption && (
+                            <span className="inline-block mt-1 bg-stone-950 px-2 py-0.5 rounded text-[9px] text-amber-400 border border-stone-850">
+                              🚚 {o.deliveryOption}
+                            </span>
                           )}
-                          {o.paymentScreenshot ? (
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-[10px] text-stone-500">Screenshot:</span>
-                              <button
-                                type="button"
-                                onClick={() => setSelectedScreenshotForModal(o.paymentScreenshot || null)}
-                                className="px-1.5 py-0.5 bg-amber-400/10 text-amber-400 border border-amber-405/20 hover:bg-amber-400 hover:text-stone-950 rounded text-[9px] font-bold uppercase transition-all cursor-pointer"
-                              >
-                                View Proof
-                              </button>
-                            </div>
-                          ) : (
-                            o.paymentMethod !== 'Cash on Delivery' && (
-                              <span className="text-[9px] text-stone-550 block italic">No screenshot proofs uploaded</span>
-                            )
-                          )}
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <select
-                          value={o.status}
-                          onChange={(e) => updateOrderStatus(o.id, e.target.value as any)}
-                          className={`px-2.5 py-1 rounded text-[10px] uppercase font-bold bg-stone-900 focus:outline-none border border-stone-850 cursor-pointer ${
-                            o.status === 'Pending' ? 'text-amber-400' : 
-                            o.status === 'Approved' ? 'text-emerald-450 text-emerald-400' :
-                            o.status === 'Rejected' ? 'text-red-500' :
-                            o.status === 'Confirmed' ? 'text-blue-400' : 
-                            o.status === 'Shipped' ? 'text-indigo-400' : 
-                            o.status === 'Delivered' ? 'text-emerald-400' : 'text-red-400'
-                          }`}
-                        >
-                          <option value="Pending">Pending Validation</option>
-                          <option value="Approved">Approved</option>
-                          <option value="Rejected">Rejected</option>
-                          <option value="Confirmed">Confirmed</option>
-                          <option value="Shipped">Dispatched/Shipped</option>
-                          <option value="Delivered">Delivered Success</option>
-                          <option value="Cancelled">Cancelled</option>
-                        </select>
-                      </td>
-                      <td className="p-3">
-                        <div className="flex items-center justify-end gap-1.5">
-                          {o.status === 'Pending' && (
-                            <>
-                              <button
-                                onClick={() => updateOrderStatus(o.id, 'Approved')}
-                                className="p-1.5 bg-emerald-950 text-emerald-400 border border-emerald-900/50 hover:bg-emerald-500 hover:text-stone-950 rounded transition-all cursor-pointer"
-                                title="Approve Order"
-                              >
-                                <Check className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                onClick={() => updateOrderStatus(o.id, 'Rejected')}
-                                className="p-1.5 bg-red-950/40 text-red-400 border border-red-900/50 hover:bg-red-500 hover:text-stone-950 rounded transition-all cursor-pointer"
-                                title="Reject Order"
-                              >
-                                <span className="text-[10px] font-bold block px-0.5">X</span>
-                              </button>
-                            </>
-                          )}
-                          <button
-                            onClick={() => deleteOrder(o.id)}
-                            className="p-1.5 bg-stone-900 text-stone-500 hover:text-red-400 hover:bg-stone-850 rounded cursor-pointer"
-                            title="Delete Order Record"
+                        </td>
+                        <td className="p-4 space-y-2">
+                          <div>
+                            <span className="block text-emerald-400 font-bold font-mono text-sm leading-none">৳{o.total.toLocaleString()} BDT</span>
+                            <span className="block text-[9px] text-stone-400 mt-1 uppercase font-semibold">{o.paymentMethod}</span>
+                          </div>
+                          
+                          {/* Render Payment Screenshot Proof and Transaction ID if exists */}
+                          <div className="space-y-1.5 pt-0.5">
+                            {o.transactionId && (
+                              <div className="text-[10px] font-mono text-stone-300">
+                                <span className="text-stone-500">TrxID:</span> <span className="select-all bg-stone-950 px-1 rounded">{o.transactionId}</span>
+                              </div>
+                            )}
+                            {o.paymentScreenshot ? (
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[10px] text-stone-500">Screenshot:</span>
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedScreenshotForModal(o.paymentScreenshot || null)}
+                                  className="px-1.5 py-0.5 bg-amber-400/10 text-amber-400 border border-amber-405/20 hover:bg-amber-400 hover:text-stone-950 rounded text-[9px] font-bold uppercase transition-all cursor-pointer"
+                                >
+                                  View Proof
+                                </button>
+                              </div>
+                            ) : (
+                              o.paymentMethod !== 'Cash on Delivery' && (
+                                <span className="text-[9px] text-stone-550 block italic">No screenshot proofs uploaded</span>
+                              )
+                            )}
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <select
+                            value={o.status}
+                            onChange={(e) => updateOrderStatus(o.id, e.target.value as any)}
+                            className={`px-2.5 py-1 rounded text-[10px] uppercase font-bold bg-stone-900 focus:outline-none border border-stone-850 cursor-pointer ${
+                              o.status === 'Pending' ? 'text-amber-400' : 
+                              o.status === 'Approved' ? 'text-emerald-450 text-emerald-400' :
+                              o.status === 'Rejected' ? 'text-red-500' :
+                              o.status === 'Confirmed' ? 'text-blue-400' : 
+                              o.status === 'Shipped' ? 'text-indigo-400' : 
+                              o.status === 'Delivered' ? 'text-emerald-400' : 'text-red-400'
+                            }`}
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
+                            <option value="Pending">Pending Validation</option>
+                            <option value="Approved">Approved</option>
+                            <option value="Rejected">Rejected</option>
+                            <option value="Confirmed">Confirmed</option>
+                            <option value="Shipped">Dispatched/Shipped</option>
+                            <option value="Delivered">Delivered Success</option>
+                            <option value="Cancelled">Cancelled</option>
+                          </select>
+                        </td>
+                        <td className="p-3">
+                          <div className="flex items-center justify-end gap-1.5">
+                            {o.status === 'Pending' && (
+                              <>
+                                <button
+                                  onClick={() => updateOrderStatus(o.id, 'Approved')}
+                                  className="p-1.5 bg-emerald-950 text-emerald-400 border border-emerald-900/50 hover:bg-emerald-500 hover:text-stone-950 rounded transition-all cursor-pointer"
+                                  title="Approve Order"
+                                >
+                                  <Check className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => updateOrderStatus(o.id, 'Rejected')}
+                                  className="p-1.5 bg-red-950/40 text-red-400 border border-red-900/50 hover:bg-red-500 hover:text-stone-950 rounded transition-all cursor-pointer"
+                                  title="Reject Order"
+                                >
+                                  <span className="text-[10px] font-bold block px-0.5">X</span>
+                                </button>
+                              </>
+                            )}
+                            <button
+                              onClick={() => deleteOrder(o.id)}
+                              className="p-1.5 bg-stone-900 text-stone-500 hover:text-red-400 hover:bg-stone-850 rounded cursor-pointer"
+                              title="Delete Order Record"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                      {/* NOTIFICATION MESSAGING WIDGET ROW FOR THE DESKTOP TABLE */}
+                      <tr className="bg-stone-950/50">
+                        <td colSpan={5} className="p-3 border-t border-stone-900 text-[11px]">
+                          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 bg-stone-905 p-2 rounded border border-stone-850/40 font-sans">
+                            <span className="text-stone-400 flex items-center gap-1.5 font-bold shrink-0">
+                              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                              মেসেজ নোটিফিকেশন গেটওয়ে (Send Alerts to {o.customerName}):
+                            </span>
+                            <div className="flex flex-wrap gap-2 text-[10px] w-full md:w-auto">
+                              
+                              {/* Confirmed Alert */}
+                              <div className="flex items-center gap-1 bg-stone-900 px-2 py-1 rounded border border-stone-850">
+                                <span className="text-stone-400 font-semibold mr-1">অর্ডার কনফার্ম:</span>
+                                <a
+                                  href={`https://wa.me/${o.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
+                                    `🎉 ARISAN\n\nপ্রিয় ${o.customerName},\n\nআপনার অর্ডারটি সফলভাবে কনফার্ম করা হয়েছে।\n\n📦 Order ID: #${o.id.slice(0, 8).toUpperCase()}\n💎 Product: ${o.items.map((it) => `${it.title} (${it.quantity} টি)`).join(', ')}\n💰 Total Amount: ${o.total} BDT\n\nশীঘ্রই আমাদের লজিস্টিক পার্টনার আপনার ঠিকানায় পার্সেলটি পৌঁছে দেবে। সাথে থাকার জন্য ধন্যবাদ। 💚`
+                                  )}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-green-400 hover:text-green-300 font-bold underline"
+                                >
+                                  WhatsApp
+                                </a>
+                                <span className="text-stone-700">|</span>
+                                <a
+                                  href={`mailto:${o.email || ''}?subject=${encodeURIComponent('ARISAN - Order Confirmed!')}&body=${encodeURIComponent(
+                                    `🎉 ARISAN\n\nপ্রিয় ${o.customerName},\n\nআপনার অর্ডারটি সফলভাবে কনফার্ম করা হয়েছে।\n\n📦 Order ID: #${o.id.slice(0, 8).toUpperCase()}\n💎 Product: ${o.items.map((it) => `${it.title} (${it.quantity} টি)`).join(', ')}\n💰 Total Amount: ${o.total} BDT\n\nশীঘ্রই আমাদের লজিস্টিক পার্টনার আপনার ঠিকানায় পার্সেলটি পৌঁছে দেবে। সাথে থাকার জন্য ধন্যবাদ। 💚`
+                                  )}`}
+                                  className="text-stone-400 hover:text-white font-bold underline"
+                                >
+                                  Email
+                                </a>
+                              </div>
+
+                              {/* Delivered Alert (Requested Specific Template) */}
+                              <div className="flex items-center gap-1 bg-amber-500/10 px-2 py-1 rounded border border-amber-500/20">
+                                <span className="text-amber-400 font-bold mr-1">⭐ সফল ডেলিভারি:</span>
+                                <a
+                                  href={`https://wa.me/${o.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
+                                    `🎉 ARISAN\n\nপ্রিয় ${o.customerName || 'গ্রাহক'},\n\nআপনার অর্ডার সফলভাবে ডেলিভারি সম্পন্ন হয়েছে।\n\n📦 Order ID: #${o.id.slice(0, 8).toUpperCase()}\n💎 Product: ${o.items.map((it) => `${it.title} (${it.quantity} টি)`).join(', ')}\n📅 Delivery Date: ${new Date().toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' })}\n\nআমাদের উপর আস্থা রাখার জন্য আন্তরিক ধন্যবাদ। আপনার মতামত ও রিভিউ আমাদের জন্য অত্যন্ত মূল্যবান। ⭐\n\nআবারও ARISAN-এ আপনাকে স্বাগতম। 💚`
+                                  )}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-amber-400 hover:text-amber-300 font-bold underline"
+                                >
+                                  WhatsApp 送
+                                </a>
+                                <span className="text-amber-900">|</span>
+                                <a
+                                  href={`mailto:${o.email || ''}?subject=${encodeURIComponent('ARISAN - Order Delivered Successfully!')}&body=${encodeURIComponent(
+                                    `🎉 ARISAN\n\nপ্রিয় ${o.customerName},\n\nআপনার অর্ডার সফলভাবে ডেলিভারি সম্পন্ন হয়েছে।\n\n📦 Order ID: #${o.id.slice(0, 8).toUpperCase()}\n💎 Product: ${o.items.map((it) => `${it.title} (${it.quantity} টি)`).join(', ')}\n📅 Delivery Date: ${new Date().toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' })}\n\nআমাদের উপর আস্থা রাখার জন্য আন্তরিক ধন্যবাদ। আপনার মতামত ও রিভিউ আমাদের জন্য অত্যন্ত মূল্যবান। ⭐\n\nআবারও ARISAN-এ আপনাকে স্বাগতম। 💚`
+                                  )}`}
+                                  className="text-stone-300 hover:text-white font-bold underline"
+                                >
+                                  Email
+                                </a>
+                              </div>
+
+                              {/* Cancelled Alert */}
+                              <div className="flex items-center gap-1 bg-stone-900 px-2 py-1 rounded border border-stone-850">
+                                <span className="text-stone-400 font-semibold mr-1">বাতিল/রিজেক্ট:</span>
+                                <a
+                                  href={`https://wa.me/${o.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
+                                    `⚠️ ARISAN\n\nপ্রিয় ${o.customerName},\n\nঅনিবার্য কারণবশত আপনার অর্ডারটি বাতিল করা হয়েছে।\n\n📦 Order ID: #${o.id.slice(0, 8).toUpperCase()}\n💎 Product: ${o.items.map((it) => `${it.title} (${it.quantity} টি)`).join(', ')}\n\nআপনার কোনো প্রশ্ন বা বিস্তারিত জিজ্ঞাস্য থাকলে সরাসরি আমাদের হেল্পলাইনে কথা বলুন। ধন্যবাদ। 💚`
+                                  )}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-red-400 hover:text-red-350 font-bold underline"
+                                >
+                                  WhatsApp
+                                </a>
+                                <span className="text-stone-700">|</span>
+                                <a
+                                  href={`mailto:${o.email || ''}?subject=${encodeURIComponent('ARISAN - Order Update Notice')}&body=${encodeURIComponent(
+                                    `⚠️ ARISAN\n\nপ্রিয় ${o.customerName},\n\nঅনিবার্য কারণবশত আপনার অর্ডারটি বাতিল করা হয়েছে।\n\n📦 Order ID: #${o.id.slice(0, 8).toUpperCase()}\n💎 Product: ${o.items.map((it) => `${it.title} (${it.quantity} টি)`).join(', ')}\n\nআপনার কোনো প্রশ্ন বা বিস্তারিত জিজ্ঞাস্য থাকলে সরাসরি আমাদের হেল্পলাইনে কথা বলুন। ধন্যবাদ। 💚`
+                                  )}`}
+                                  className="text-stone-400 hover:text-white font-bold underline"
+                                >
+                                  Email
+                                </a>
+                              </div>
+
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>
