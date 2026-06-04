@@ -247,9 +247,7 @@ export const Navbar: React.FC = () => {
                   >
                     <User className="w-3.5 h-3.5" />
                     <span>
-                      {currentUser.role === 'admin' 
-                        ? (language === 'bn' ? 'অ্যাডমিন প্যানেল' : 'Admin Panel') 
-                        : (language === 'bn' ? 'আমার প্রোফাইল' : 'My Profile')}
+                      {language === 'bn' ? 'আমার প্রোফাইল' : 'My Profile'}
                     </span>
                   </button>
                   <button

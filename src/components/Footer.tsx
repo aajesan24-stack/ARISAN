@@ -183,16 +183,6 @@ export const Footer: React.FC = () => {
                 Terms of Curation
               </button>
             </li>
-            <li>
-              <button 
-                onClick={() => setActiveTab('admin-dashboard')} 
-                className="hover:text-amber-400/90 text-stone-600 transition-colors flex items-center gap-1.5 group cursor-pointer mt-5 pt-3 border-t border-stone-900/50 w-full"
-                title="Only Authorized Store Admins"
-              >
-                <ShieldAlert className="w-3.5 h-3.5 text-stone-800 group-hover:text-amber-500/80" />
-                <span className="text-[11px] font-sans tracking-wide">Admin Control Panel</span>
-              </button>
-            </li>
           </ul>
         </div>
 

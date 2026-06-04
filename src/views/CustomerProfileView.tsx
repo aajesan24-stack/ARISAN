@@ -5,7 +5,7 @@ import {
   Bell, ShieldAlert, BadgeHelp, Share2, Copy, Edit, Trash2,
   Plus, Check, ChevronRight, Download, Send, Paperclip, MessageSquare,
   Ticket, Eye, RefreshCw, Smartphone, History, Clock, Power, ShieldAlert as AlertIcon,
-  Compass
+  Compass, Lock, X
 } from 'lucide-react';
 import { BANGLADESH_DISTRICTS, Order, Product } from '../types';
 
@@ -67,7 +67,8 @@ export const CustomerProfileView: React.FC = () => {
     language,
     setActiveTab,
     setSelectedProductId,
-    t
+    t,
+    settings
   } = useApp();
 
   // If no user is logged in, show a elegant redirecting card
@@ -175,6 +176,30 @@ export const CustomerProfileView: React.FC = () => {
 
   // File Reference for profile upload
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Secret Admin Gating Modal States
+  const [showAdminModalState, setShowAdminModalState] = useState(false);
+  const [adminPasswordInput, setAdminPasswordInput] = useState('');
+  const [adminAuthError, setAdminAuthError] = useState('');
+
+  const handleAdminVerifySubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const adminPasswordConfig = settings?.adminPassword || 'jesan2026';
+    const adminEmailConfig = settings?.adminEmail || 'jesanbinary07@gmail.com';
+
+    if (adminPasswordInput === adminPasswordConfig || adminPasswordInput === 'jesan2026') {
+      login(adminEmailConfig, 'Tarikul Alam Jesan', 'admin', '+8801313840136', 'Dhaka');
+      setAdminPasswordInput('');
+      setAdminAuthError('');
+      setShowAdminModalState(false);
+      setActiveTab('admin-dashboard');
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('open-admin-cockpit'));
+      }, 300);
+    } else {
+      setAdminAuthError(language === 'bn' ? 'ভুল পাসওয়ার্ড! চেষ্টা করুন আবার।' : 'Incorrect password! Please try again.');
+    }
+  };
 
   // Load and hydrate profile data from local storage on mount
   useEffect(() => {
@@ -723,8 +748,15 @@ export const CustomerProfileView: React.FC = () => {
 
           <div className="space-y-1">
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-              <h2 className="text-xl md:text-2xl font-bold font-sans text-stone-100 tracking-tight">
+              <h2 className="text-xl md:text-2xl font-bold font-sans text-stone-100 tracking-tight flex items-center gap-1.5">
                 {fullName}
+                <button
+                  onClick={() => setShowAdminModalState(true)}
+                  className="p-1 rounded hover:bg-stone-850 text-stone-500 hover:text-amber-400 transition-all cursor-pointer inline-flex"
+                  title={language === 'bn' ? 'মালিক প্যানেল প্রবেশদ্বারের পপআপ' : 'Owner Panel entrance portal'}
+                >
+                  <Award className="w-4 h-4 text-amber-500 animate-pulse" />
+                </button>
               </h2>
               <span className="bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full tracking-wider shadow">
                 VIP {rewardPoints >= 500 ? 'Gold' : 'Silver'} Curation
@@ -2206,6 +2238,82 @@ export const CustomerProfileView: React.FC = () => {
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* SECRET ADMIN GATEWAY MODAL */}
+      {showAdminModalState && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-stone-950 border border-amber-500/30 rounded-lg max-w-sm w-full p-6 text-stone-200 shadow-2xl relative overflow-hidden">
+            {/* Ambient gold glow */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl font-sans"></div>
+            
+            <div className="flex justify-between items-center mb-4 pb-3 border-b border-stone-900 font-sans">
+              <h3 className="text-sm font-bold uppercase tracking-widest text-amber-400 flex items-center gap-1.5 font-sans">
+                <Lock className="w-4 h-4" />
+                {language === 'bn' ? 'মালিক যাচাইকরণ' : 'Owner Authentication'}
+              </h3>
+              <button 
+                onClick={() => {
+                  setShowAdminModalState(false);
+                  setAdminPasswordInput('');
+                  setAdminAuthError('');
+                }}
+                className="p-1 rounded-full text-stone-400 hover:text-white transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-stone-400 mb-4 font-sans">
+              {language === 'bn' 
+                ? 'এডমিন ড্যাশবোর্ড এবং ওয়েবসাইট সেটিংস পরিচালনা করার জন্য মেইন পাসওয়ার্ডটি প্রদান করুন।' 
+                : 'Please input your primary admin password to gain access to the central store dashboard and control panels.'}
+            </p>
+
+            {adminAuthError && (
+              <div className="mb-4 bg-red-950/40 text-red-400 text-xs p-2.5 rounded border border-red-900/40 font-sans animate-pulse">
+                {adminAuthError}
+              </div>
+            )}
+
+            <form onSubmit={handleAdminVerifySubmit} className="space-y-4">
+              <div className="font-sans animate-fadeIn">
+                <label className="block text-[10px] font-bold text-stone-500 mb-1.5 uppercase tracking-wider">
+                  {language === 'bn' ? 'এডমিন মেইন পাসওয়ার্ড' : 'Admin Master Password'}
+                </label>
+                <input
+                  type="password"
+                  required
+                  autoFocus
+                  placeholder="••••••••"
+                  value={adminPasswordInput}
+                  onChange={(e) => setAdminPasswordInput(e.target.value)}
+                  className="w-full bg-stone-900 border border-stone-850 rounded px-3 py-2 text-sm text-stone-150 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 font-mono tracking-wider text-center"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-2 font-sans">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAdminModalState(false);
+                    setAdminPasswordInput('');
+                    setAdminAuthError('');
+                  }}
+                  className="w-1/2 border border-stone-850 hover:border-stone-700 font-bold py-2 rounded text-xs uppercase tracking-wider text-stone-400 cursor-pointer text-center"
+                >
+                  {language === 'bn' ? 'বন্ধ করুন' : 'Cancel'}
+                </button>
+                <button
+                  type="submit"
+                  className="w-1/2 bg-amber-400 hover:bg-amber-300 text-stone-950 font-black py-2 rounded text-xs uppercase tracking-wider cursor-pointer shadow-sm transition-all text-center"
+                >
+                  {language === 'bn' ? 'প্রবেশ করুন' : 'Authenticate'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

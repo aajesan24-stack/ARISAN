@@ -175,6 +175,16 @@ export const PopupAdminDashboard: React.FC = () => {
     }
   }, [settings]);
 
+  useEffect(() => {
+    const handleOpenCockpit = () => {
+      setIsOpen(true);
+    };
+    window.addEventListener('open-admin-cockpit', handleOpenCockpit);
+    return () => {
+      window.removeEventListener('open-admin-cockpit', handleOpenCockpit);
+    };
+  }, []);
+
   // Sync translating inputs
   useEffect(() => {
     setCustomValEn(overrideEn[targetTranslationKey] || '');
@@ -391,17 +401,19 @@ export const PopupAdminDashboard: React.FC = () => {
   return (
     <>
       {/* 1. FLOATING LUXURY TRIGGER BUTTON */}
-      <button
-        id="popup-admin-trigger-button"
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-24 right-5 z-40 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-stone-950 font-black px-4 py-3 rounded-full shadow-[0_4px_15px_rgba(251,191,36,0.4)] flex items-center gap-2 text-xs uppercase tracking-widest cursor-pointer transition-all duration-300 hover:scale-105 active:scale-95 group border border-amber-300/30"
-        title="Open Popup Interactive Store Settings Cockpit"
-      >
-        <span className="p-1 px-1.5 bg-stone-950 text-amber-400 rounded-full font-sans text-[9px] font-black group-hover:rotate-180 transition-transform duration-500">
-          ⚙️
-        </span>
-        <span className="font-sans">Store Cockpit</span>
-      </button>
+      {currentUser?.role === 'admin' && (
+        <button
+          id="popup-admin-trigger-button"
+          onClick={() => setIsOpen(true)}
+          className="fixed bottom-24 right-5 z-40 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-stone-950 font-black px-4 py-3 rounded-full shadow-[0_4px_15px_rgba(251,191,36,0.4)] flex items-center gap-2 text-xs uppercase tracking-widest cursor-pointer transition-all duration-300 hover:scale-105 active:scale-95 group border border-amber-300/30"
+          title="Open Popup Interactive Store Settings Cockpit"
+        >
+          <span className="p-1 px-1.5 bg-stone-950 text-amber-400 rounded-full font-sans text-[9px] font-black group-hover:rotate-180 transition-transform duration-500">
+            ⚙️
+          </span>
+          <span className="font-sans">Store Cockpit</span>
+        </button>
+      )}
 
       {/* 2. BACKDROP & POPUP BOX */}
       <AnimatePresence>
