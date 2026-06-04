@@ -84,6 +84,58 @@ function logAdminActivity(action: string, details: string, status: 'SUCCESS' | '
   }
 }
 
+const CUSTOMERS_FILE = path.join(process.cwd(), 'customers.json');
+
+function getRegisteredCustomers() {
+  if (fs.existsSync(CUSTOMERS_FILE)) {
+    try {
+      return JSON.parse(fs.readFileSync(CUSTOMERS_FILE, 'utf-8'));
+    } catch (e) {
+      console.error('Error reading customers.json', e);
+    }
+  }
+  return [];
+}
+
+function saveRegisteredCustomers(customers: any[]) {
+  try {
+    fs.writeFileSync(CUSTOMERS_FILE, JSON.stringify(customers, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('Failed to write customers.json', err);
+  }
+}
+
+// CUSTOMERS DYNAMIC RECONCILIATION API 1: Retrieve all registered customers
+app.get('/api/customers', (req, res) => {
+  res.json({ customers: getRegisteredCustomers() });
+});
+
+// CUSTOMERS DYNAMIC RECONCILIATION API 2: Sync/save list bidirectionally
+app.post('/api/customers/sync', (req, res) => {
+  const { customers } = req.body;
+  if (!Array.isArray(customers)) {
+    return res.status(400).json({ success: false, error: 'Customers array is required.' });
+  }
+
+  const existing = getRegisteredCustomers();
+  const mergedMap = new Map();
+
+  // Load existing server customers first
+  existing.forEach((c: any) => {
+    if (c.phone) mergedMap.set(c.phone, c);
+  });
+
+  // Overwrite or merge with incoming client customers (allows edits, additions, password changes)
+  customers.forEach((c: any) => {
+    if (c.phone) mergedMap.set(c.phone, c);
+  });
+
+  const mergedList = Array.from(mergedMap.values());
+  saveRegisteredCustomers(mergedList);
+
+  res.json({ success: true, customers: mergedList });
+});
+
 // SECURITY API 1: Request OTP validation
 app.post('/api/admin/request-otp', async (req, res) => {
   const { password, configuredPassword, adminEmail } = req.body;

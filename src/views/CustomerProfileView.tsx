@@ -68,7 +68,8 @@ export const CustomerProfileView: React.FC = () => {
     setActiveTab,
     setSelectedProductId,
     t,
-    settings
+    settings,
+    updateRegisteredCustomersList
   } = useApp();
 
   // If no user is logged in, show a elegant redirecting card
@@ -376,16 +377,11 @@ export const CustomerProfileView: React.FC = () => {
     login(currentUser.email, updatedName, currentUser.role, updatedName.includes('@') ? undefined : userPhone, currentUser.district);
 
     // Sync back security/username array as well
-    const savedCustomers = localStorage.getItem('arisan_registered_customers');
-    if (savedCustomers) {
-      try {
-        const parsed = JSON.parse(savedCustomers) as any[];
-        const index = parsed.findIndex(c => c.phone === userPhone);
-        if (index > -1) {
-          parsed[index].name = updatedName;
-          localStorage.setItem('arisan_registered_customers', JSON.stringify(parsed));
-        }
-      } catch (err) {}
+    const index = registeredCustomers.findIndex(c => c.phone === userPhone);
+    if (index > -1) {
+      const updatedList = [...registeredCustomers];
+      updatedList[index].name = updatedName;
+      updateRegisteredCustomersList(updatedList);
     }
   };
 
@@ -506,34 +502,29 @@ export const CustomerProfileView: React.FC = () => {
     }
 
     // Update inside registered list
-    const savedCustomers = localStorage.getItem('arisan_registered_customers');
-    if (savedCustomers) {
-      try {
-        const parsed = JSON.parse(savedCustomers) as any[];
-        const index = parsed.findIndex(c => c.phone === userPhone);
-        if (index > -1) {
-          const matchedUser = parsed[index];
-          if (matchedUser.password && matchedUser.password !== currentPassword) {
-            setSecurityMsg({ 
-              text: language === 'bn' ? 'বর্তমান পাসওয়ার্ডটি সঠিক নয়!' : 'The current password you provided is incorrect!', 
-              type: 'error' 
-            });
-            return;
-          }
-          parsed[index].password = newPassword;
-          localStorage.setItem('arisan_registered_customers', JSON.stringify(parsed));
-          
-          setSecurityMsg({ 
-            text: language === 'bn' ? 'পাসওয়ার্ড সফলভাবে পরিবর্তন করা হয়েছে!' : 'Password changed successfully in real-time!', 
-            type: 'success' 
-          });
-          setCurrentPassword('');
-          setNewPassword('');
-          setConfirmPassword('');
-        }
-      } catch (err) {
-        setSecurityMsg({ text: 'Error matching dataset.', type: 'error' });
+    const index = registeredCustomers.findIndex(c => c.phone === userPhone);
+    if (index > -1) {
+      const matchedUser = registeredCustomers[index];
+      if (matchedUser.password && matchedUser.password !== currentPassword) {
+        setSecurityMsg({ 
+          text: language === 'bn' ? 'বর্তমান পাসওয়ার্ডটি সঠিক নয়!' : 'The current password you provided is incorrect!', 
+          type: 'error' 
+        });
+        return;
       }
+      const updatedList = [...registeredCustomers];
+      updatedList[index].password = newPassword;
+      updateRegisteredCustomersList(updatedList);
+      
+      setSecurityMsg({ 
+        text: language === 'bn' ? 'পাসওয়ার্ড সফলভাবে পরিবর্তন করা হয়েছে!' : 'Password changed successfully in real-time!', 
+        type: 'success' 
+      });
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } else {
+      setSecurityMsg({ text: 'Error matching dataset.', type: 'error' });
     }
   };
 

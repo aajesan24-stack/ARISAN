@@ -32,6 +32,7 @@ interface AppContextType {
   registeredCustomers: { phone: string; password?: string; district: string; name: string }[];
   registerCustomer: (phone: string, password: string, district: string, name?: string) => { success: boolean; message: string };
   loginWithPhone: (phone: string, password: string) => { success: boolean; message: string };
+  updateRegisteredCustomersList: (newList: { phone: string; password?: string; district: string; name: string }[]) => void;
 
   // Active page routing
   activeTab: string;
@@ -233,9 +234,67 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return local ? JSON.parse(local) : [];
   });
 
+  // Sync customers with the backend on component initialization
+  useEffect(() => {
+    const syncOnMount = async () => {
+      try {
+        const response = await fetch('/api/customers');
+        const data = await response.json();
+        if (data && Array.isArray(data.customers)) {
+          const localVal = localStorage.getItem('arisan_registered_customers');
+          const localCustomers = localVal ? JSON.parse(localVal) : [];
+          
+          const mergedMap = new Map();
+          // First add local ones
+          localCustomers.forEach((c: any) => {
+            if (c.phone) mergedMap.set(c.phone, c);
+          });
+          // Then add server ones (merging them)
+          data.customers.forEach((c: any) => {
+            if (c.phone) mergedMap.set(c.phone, c);
+          });
+
+          const merged = Array.from(mergedMap.values());
+          setRegisteredCustomers(merged);
+          localStorage.setItem('arisan_registered_customers', JSON.stringify(merged));
+
+          // Post standard merged state back to server
+          await fetch('/api/customers/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ customers: merged })
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching/syncing customers on mount', err);
+      }
+    };
+    syncOnMount();
+  }, []);
+
   useEffect(() => {
     localStorage.setItem('arisan_registered_customers', JSON.stringify(registeredCustomers));
+    
+    // Sync to backend database whenever registered customers list is modified
+    const syncToBackend = async () => {
+      try {
+        await fetch('/api/customers/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ customers: registeredCustomers })
+        });
+      } catch (e) {
+        console.error('Error syncing customer changes to backend', e);
+      }
+    };
+    if (registeredCustomers.length > 0) {
+      syncToBackend();
+    }
   }, [registeredCustomers]);
+
+  const updateRegisteredCustomersList = (newList: typeof registeredCustomers) => {
+    setRegisteredCustomers(newList);
+  };
 
   // Visual Editing Mode States
   const [isVisualEditMode, setVisualEditModeState] = useState<boolean>(() => {
@@ -871,6 +930,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         registeredCustomers,
         registerCustomer,
         loginWithPhone,
+        updateRegisteredCustomersList,
         activeTab,
         setActiveTab,
         selectedProductId,
