@@ -8,6 +8,22 @@ import {
   Type, Palette, Move, Sparkles, Image, Phone, Heart, PlusCircle, Search, Save
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { AdminOrdersDashboard } from './AdminOrdersDashboard';
+
+const getWhatsAppNumber = (phone: string): string => {
+  if (!phone) return '';
+  const cleaned = phone.replace(/[^0-9]/g, '');
+  if (cleaned.startsWith('0') && cleaned.length === 11) {
+    return '88' + cleaned;
+  }
+  if (cleaned.startsWith('1') && cleaned.length === 10) {
+    return '880' + cleaned;
+  }
+  if (cleaned.startsWith('880') && cleaned.length === 13) {
+    return cleaned;
+  }
+  return cleaned;
+};
 
 export const PopupAdminDashboard: React.FC = () => {
   const {
@@ -18,6 +34,7 @@ export const PopupAdminDashboard: React.FC = () => {
     addProduct,
     updateProduct,
     deleteProduct,
+    deleteOrder,
     updateSettings,
     updateOrderStatus,
     currentUser,
@@ -111,6 +128,7 @@ export const PopupAdminDashboard: React.FC = () => {
 
   // Status indicators
   const [feedbackMsg, setFeedbackMsg] = useState('');
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
   // Hydrate states when settings object changes
   useEffect(() => {
@@ -1469,336 +1487,7 @@ export const PopupAdminDashboard: React.FC = () => {
 
                     {/* TAB CONTENT: ORDERS COCKPIT SECTION */}
                     {activeTab === 'orders' && (
-                      <div className="space-y-4">
-                        
-                        <div className="bg-stone-950 p-4 border border-stone-850 rounded-lg space-y-4">
-                          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-850 pb-2.5">
-                            <div className="flex items-center gap-2">
-                              <FileText className="w-5 h-5 text-amber-500" />
-                              <h3 className="text-sm font-black uppercase tracking-wider text-amber-400">
-                                Live Customer Orders Management
-                              </h3>
-                            </div>
-                            <span className="text-[10px] font-mono text-stone-400 bg-stone-900 border border-stone-800 px-2 py-0.5 rounded">
-                              Total active orders: {orders.length}
-                            </span>
-                          </div>
-
-                          <p className="text-[11px] text-stone-400 leading-relaxed font-sans">
-                            আপনি সরাসরি এই ককপিট থেকে যেকোনো কাস্টমারের অর্ডারের বিবরণ দেখতে পারবেন, কাস্টমারকে সরাসরি ফোন বা হোয়াটসঅ্যাপ (WhatsApp) করতে পারবেন এবং অর্ডারের স্ট্যাটাস কনফার্ম বা পরিবর্তন করতে পারবেন।
-                          </p>
-
-                          {orders.length === 0 ? (
-                            <div className="py-12 text-center text-stone-500 italic text-xs">
-                              <ShieldAlert className="w-8 h-8 text-stone-600 mx-auto mb-2 animate-bounce" />
-                              No orders found on the store database!
-                            </div>
-                          ) : (
-                            <div className="space-y-4">
-                              {orders.map((order) => (
-                                <div key={order.id} className="bg-stone-900 border border-stone-800 p-4 rounded-lg space-y-3 shadow-lg hover:border-amber-500/20 transition-all font-sans text-left">
-                                  
-                                  {/* HEADER ROW OF ORDER CARD */}
-                                  <div className="flex flex-wrap items-center justify-between gap-2 bg-stone-950 p-2.5 rounded border border-stone-800 text-xs">
-                                    <div className="space-y-0.5">
-                                      <span className="font-bold text-stone-300 block">ID: {order.id.slice(0, 8)}...</span>
-                                      <span className="text-[10px] text-stone-500">Method: {order.paymentMethod}</span>
-                                    </div>
-                                    <div className="flex items-center gap-1.5">
-                                      <span className="text-[10px] text-stone-400">Order Status:</span>
-                                      <select
-                                        value={order.status}
-                                        onChange={(e) => {
-                                          updateOrderStatus(order.id, e.target.value as any);
-                                          triggerFeedback(`Order status modified to ${e.target.value}!`);
-                                        }}
-                                        className={`px-2 py-1 rounded text-[10px] font-black uppercase bg-stone-900 border border-stone-800 focus:outline-none cursor-pointer ${
-                                          order.status === 'Pending' ? 'text-amber-450 text-amber-400 border-amber-400/30' :
-                                          order.status === 'Approved' ? 'text-emerald-400 border-emerald-450/30' :
-                                          order.status === 'Confirmed' ? 'text-cyan-400 border-cyan-400/30' :
-                                          order.status === 'Shipped' ? 'text-blue-400 border-blue-405/30' :
-                                          order.status === 'Delivered' ? 'text-emerald-400 border-emerald-500/30' :
-                                          'text-red-405 text-red-400 border-red-500/30'
-                                        }`}
-                                      >
-                                        <option value="Pending">Pending (পেন্ডিং)</option>
-                                        <option value="Approved">Approved (অনুমোদিত)</option>
-                                        <option value="Confirmed">Confirmed (কনফার্মড)</option>
-                                        <option value="Shipped">Shipped (ডেলিভারির জন্য পাঠানো হয়েছে)</option>
-                                        <option value="Delivered">Delivered (সংরক্ষিত / সম্পন্ন)</option>
-                                        <option value="Cancelled">Cancelled (বাতিলকৃত)</option>
-                                      </select>
-                                    </div>
-                                  </div>
-
-                                  {/* GRID DETAILS PANEL */}
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs pt-1">
-                                    
-                                    {/* Column 1: Client Information & Call Triggers */}
-                                    <div className="space-y-2 bg-stone-950/60 p-3 rounded border border-stone-850">
-                                      <span className="block text-amber-400 text-[10px] uppercase font-bold tracking-wider">
-                                        👤 Buyer Details (কাস্টমারের তথ্য)
-                                      </span>
-                                      <div className="space-y-1">
-                                        <div className="flex justify-between">
-                                          <span className="text-stone-500">Name:</span>
-                                          <span className="font-bold text-stone-200 truncate">{order.customerName}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                          <span className="text-stone-500">Phone:</span>
-                                          <span className="font-mono text-stone-100 font-bold">{order.phone}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                          <span className="text-stone-500">District:</span>
-                                          <span className="text-stone-300">{order.district}</span>
-                                        </div>
-                                        <div className="flex flex-col text-[10px] mt-1 pt-1 border-t border-stone-900">
-                                          <span className="text-stone-500">Full Shipping Address:</span>
-                                          <span className="text-stone-350 italic mt-0.5 leading-normal">{order.address}</span>
-                                        </div>
-                                      </div>
-
-                                      {/* CALL AND WHATSAPP TRIGGERS - DIRECT ONE-CLICK CHANNELS */}
-                                      <div className="pt-2 grid grid-cols-2 gap-2 text-[10px]">
-                                        <a
-                                          href={`tel:${order.phone}`}
-                                          className="flex items-center justify-center gap-1.5 py-2 px-2 bg-emerald-950 hover:bg-emerald-900 border border-emerald-800 text-emerald-400 font-black rounded text-center transition-all cursor-pointer hover:scale-[1.02] active:scale-95"
-                                          title="Initiate voice call directly"
-                                        >
-                                          <Phone className="w-3.5 h-3.5" />
-                                          <span>কল করুন</span>
-                                        </a>
-
-                                        <a
-                                          href={`https://wa.me/${order.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
-                                            `আসসালামু আলাইকুম ${order.customerName}, ARISAN BD থেকে আপনার অর্ডারটি কনফার্ম করতে নক দিয়েছি। আপনি কি অর্ডারের আইটেমগুলো এবং ঠিকানা নিশ্চিত করবেন?`
-                                          )}`}
-                                          target="_blank"
-                                          rel="noreferrer"
-                                          className="flex items-center justify-center gap-1.5 py-2 px-2 bg-green-950 hover:bg-green-900 border border-green-800 text-green-400 font-black rounded text-center transition-all cursor-pointer hover:scale-[1.02] active:scale-95"
-                                          title="Open pre-filled verification template on WhatsApp"
-                                        >
-                                          <Sparkles className="w-3.5 h-3.5 text-green-400" />
-                                          <span>WhatsApp মেসেজ</span>
-                                        </a>
-                                      </div>
-                                    </div>
-
-                                    {/* Column 2: Order Summary and Pricing */}
-                                    <div className="space-y-2 bg-stone-950/60 p-3 rounded border border-stone-850 text-xs">
-                                      <span className="block text-amber-400 text-[10px] uppercase font-bold tracking-wider">
-                                        💎 Purchased Jewelries (ক্রয়কৃত গহনা)
-                                      </span>
-                                      <div className="max-h-[80px] overflow-y-auto space-y-1.5 pr-1 divide-y divide-stone-900">
-                                        {order.items.map((item, idx) => (
-                                          <div key={idx} className="flex justify-between items-center text-[11px] pt-1.5 first:pt-0">
-                                            <div className="truncate pr-2">
-                                              <span className="font-bold text-stone-200">{item.title}</span>
-                                              {(item.size || item.color) && (
-                                                <span className="block text-[9px] text-stone-500">
-                                                  Specs: {item.size ? `Size ${item.size}` : ''} {item.color ? `| Color ${item.color}` : ''}
-                                                </span>
-                                              )}
-                                            </div>
-                                            <span className="text-stone-400 shrink-0 font-mono">
-                                              Qty: {item.quantity} × {item.price}৳
-                                            </span>
-                                          </div>
-                                        ))}
-                                      </div>
-
-                                      <div className="pt-2 border-t border-stone-900 space-y-1 text-[10px]">
-                                        <div className="flex justify-between text-stone-400">
-                                          <span>Subtotal:</span>
-                                          <span>{order.subtotal} ৳</span>
-                                        </div>
-                                        <div className="flex justify-between text-stone-400">
-                                          <span>Delivery Charge:</span>
-                                          <span>+ {order.deliveryCharge} ৳</span>
-                                        </div>
-                                        {order.discountAmount > 0 && (
-                                          <div className="flex justify-between text-red-400">
-                                            <span>Discount Applied:</span>
-                                            <span>- {order.discountAmount} ৳</span>
-                                          </div>
-                                        )}
-                                        <div className="flex justify-between text-xs font-black text-amber-400 pt-1 border-t border-stone-900 font-mono font-bold">
-                                          <span>Total Payable:</span>
-                                          <span>{order.total} ৳</span>
-                                        </div>
-                                      </div>
-                                    </div>
-
-                                  </div>
-
-                                  {/* SMS / WHATSAPP & EMAIL NOTIFICATION PANEL */}
-                                  <div className="bg-stone-950 p-3 rounded border border-stone-850 space-y-2 text-xs">
-                                    <div className="flex items-center justify-between border-b border-stone-900 pb-1.5 mb-1.5">
-                                      <span className="text-amber-400 text-[10px] uppercase font-black tracking-wider flex items-center gap-1.5">
-                                        <Sparkles className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
-                                        💬 কাস্টমার মেসেজিং নোটিফিকেশন (Client Messaging Gateway)
-                                      </span>
-                                      <span className="text-[9px] bg-stone-900 text-stone-400 px-1.5 py-0.5 rounded font-mono">
-                                        One-Click Verification Alerts
-                                      </span>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                                      
-                                      {/* Approved Alert */}
-                                      <div className="bg-stone-900 p-2.5 rounded border border-stone-850 flex flex-col justify-between space-y-2">
-                                        <div className="space-y-1">
-                                          <span className="font-bold text-stone-300 text-[10px] block border-b border-stone-850 pb-1 flex items-center gap-1">
-                                            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></span> 
-                                            অর্ডার কনফার্মড মেসেজ
-                                          </span>
-                                          <p className="text-[9px] text-stone-400 leading-normal">
-                                            অর্ডারটি স্টোর বা ডেটাবেজে সফলভাবে কনফার্ম করার আপডেট কাস্টমারকে জানান।
-                                          </p>
-                                        </div>
-                                        <div className="flex gap-1.5 pt-1.5">
-                                          <a
-                                            href={`https://wa.me/${order.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
-                                              `🎉 ARISAN\n\nপ্রিয় ${order.customerName},\n\nআপনার অর্ডারটি সফলভাবে কনফার্ম করা হয়েছে।\n\n📦 Order ID: #${order.id.slice(0, 8).toUpperCase()}\n💎 Product: ${order.items.map((it) => `${it.title} (${it.quantity} টি)`).join(', ')}\n💰 Total Amount: ${order.total} BDT\n\nশীঘ্রই আমাদের লজিস্টিক পার্টনার আপনার ঠিকানায় পার্সেলটি পৌঁছে দেবে। সাথে থাকার জন্য ধন্যবাদ। 💚`
-                                            )}`}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className="flex-1 py-1 px-2 bg-emerald-950 hover:bg-emerald-900 border border-emerald-800 text-emerald-400 font-bold rounded text-[9px] text-center transition-all cursor-pointer hover:scale-[1.02] active:scale-95"
-                                          >
-                                            🟢 WhatsApp
-                                          </a>
-                                          <a
-                                            href={`mailto:${order.email || ''}?subject=${encodeURIComponent('ARISAN - Order Confirmed!')}&body=${encodeURIComponent(
-                                              `🎉 ARISAN\n\nপ্রিয় ${order.customerName},\n\nআপনার অর্ডারটি সফলভাবে কনফার্ম করা হয়েছে।\n\n📦 Order ID: #${order.id.slice(0, 8).toUpperCase()}\n💎 Product: ${order.items.map((it) => `${it.title} (${it.quantity} টি)`).join(', ')}\n💰 Total Amount: ${order.total} BDT\n\nশীঘ্রই আমাদের লজিস্টিক পার্টনার আপনার ঠিকানায় পার্সেলটি পৌঁছে দেবে। সাথে থাকার জন্য ধন্যবাদ। 💚`
-                                            )}`}
-                                            className="py-1 px-2 bg-stone-850 hover:bg-stone-800 border border-stone-800 text-stone-300 font-bold rounded text-[9px] text-center transition-all cursor-pointer"
-                                          >
-                                            ✉️ Email
-                                          </a>
-                                        </div>
-                                      </div>
-
-                                      {/* Delivered Success Alert (Requested Template!) */}
-                                      <div className="bg-stone-900 p-2.5 rounded border border-amber-500/20 shadow-md shadow-amber-500/5 flex flex-col justify-between space-y-2">
-                                        <div className="space-y-1">
-                                          <span className="font-bold text-amber-400 text-[10px] block border-b border-stone-850 pb-1 flex items-center gap-1">
-                                            <span className="w-2 h-2 bg-amber-400 rounded-full animate-bounce"></span> 
-                                            সফল ডেলিভারি মেসেজ ⭐
-                                          </span>
-                                          <p className="text-[9px] text-stone-300 font-medium leading-normal">
-                                            অর্ডারটি সফলভাবে ডেলিভারি করা হলে এই ধন্যবাদ ও রিভিউ বার্তাটি পাঠান।
-                                          </p>
-                                        </div>
-                                        <div className="flex gap-1.5 pt-1.5">
-                                          <a
-                                            href={`https://wa.me/${order.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
-                                              `🎉 ARISAN\n\nপ্রিয় ${order.customerName || 'গ্রাহক'},\n\nআপনার অর্ডার সফলভাবে ডেলিভারি সম্পন্ন হয়েছে।\n\n📦 Order ID: #${order.id.slice(0, 8).toUpperCase()}\n💎 Product: ${order.items.map((it) => `${it.title} (${it.quantity} টি)`).join(', ')}\n📅 Delivery Date: ${new Date().toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' })}\n\nআমাদের উপর আস্থা রাখার জন্য আন্তরিক ধন্যবাদ। আপনার মতামত ও রিভিউ আমাদের জন্য অত্যন্ত মূল্যবান। ⭐\n\nআবারও ARISAN-এ আপনাকে স্বাগতম। 💚`
-                                            )}`}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className="flex-1 py-1 px-2 bg-amber-400 hover:bg-amber-500 text-stone-950 font-black rounded text-[9px] text-center transition-all cursor-pointer hover:scale-[1.02] active:scale-95 shadow-md shadow-amber-500/10"
-                                          >
-                                            🟡 WhatsApp (Send)
-                                          </a>
-                                          <a
-                                            href={`mailto:${order.email || ''}?subject=${encodeURIComponent('ARISAN - Order Delivered Successfully!')}&body=${encodeURIComponent(
-                                              `🎉 ARISAN\n\nপ্রিয় ${order.customerName},\n\nআপনার অর্ডার সফলভাবে ডেলিভারি সম্পন্ন হয়েছে।\n\n📦 Order ID: #${order.id.slice(0, 8).toUpperCase()}\n💎 Product: ${order.items.map((it) => `${it.title} (${it.quantity} টি)`).join(', ')}\n📅 Delivery Date: ${new Date().toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' })}\n\nআমাদের উপর আস্থা রাখার জন্য আন্তরিক ধন্যবাদ। আপনার মতামত ও রিভিউ আমাদের জন্য অত্যন্ত মূল্যবান। ⭐\n\nআবারও ARISAN-এ আপনাকে স্বাগতম। 💚`
-                                            )}`}
-                                            className="py-1 px-2 bg-stone-850 hover:bg-stone-800 border border-stone-800 text-stone-300 font-bold rounded text-[9px] text-center transition-all cursor-pointer"
-                                          >
-                                            ✉️ Email
-                                          </a>
-                                        </div>
-                                      </div>
-
-                                      {/* Cancelled Alert */}
-                                      <div className="bg-stone-900 p-2.5 rounded border border-stone-850 flex flex-col justify-between space-y-2">
-                                        <div className="space-y-1">
-                                          <span className="font-bold text-stone-300 text-[10px] block border-b border-stone-850 pb-1 flex items-center gap-1">
-                                            <span className="w-2 h-2 bg-red-500 rounded-full"></span> 
-                                            রিজেক্ট / ক্যানসেল মেসেজ
-                                          </span>
-                                          <p className="text-[9px] text-stone-400 leading-normal">
-                                            অনিবার্য কারণবশত বা কাস্টমার নিজেই বাতিল করতে চাইলে এই সতর্কবার্তা পাঠান।
-                                          </p>
-                                        </div>
-                                        <div className="flex gap-1.5 pt-1.5">
-                                          <a
-                                            href={`https://wa.me/${order.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
-                                              `⚠️ ARISAN\n\nপ্রিয় ${order.customerName},\n\nঅনিবার্য কারণবশত আপনার অর্ডারটি বাতিল করা হয়েছে।\n\n📦 Order ID: #${order.id.slice(0, 8).toUpperCase()}\n💎 Product: ${order.items.map((it) => `${it.title} (${it.quantity} টি)`).join(', ')}\n\nআপনার কোনো প্রশ্ন বা বিস্তারিত জিজ্ঞাস্য থাকলে براہ مہربانی আমাদের হেল্পলাইনে কথা বলুন। ধন্যবাদ। 💚`
-                                            )}`}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className="flex-1 py-1 px-2 bg-red-950 hover:bg-red-900 border border-red-950 text-red-400 font-bold rounded text-[9px] text-center transition-all cursor-pointer hover:scale-[1.02] active:scale-95"
-                                          >
-                                            🔴 WhatsApp
-                                          </a>
-                                          <a
-                                            href={`mailto:${order.email || ''}?subject=${encodeURIComponent('ARISAN - Order Update Notice')}&body=${encodeURIComponent(
-                                              `⚠️ ARISAN\n\nপ্রিয় ${order.customerName},\n\nঅনিবার্য কারণবশত আপনার অর্ডারটি বাতিল করা হয়েছে।\n\n📦 Order ID: #${order.id.slice(0, 8).toUpperCase()}\n💎 Product: ${order.items.map((it) => `${it.title} (${it.quantity} টি)`).join(', ')}\n\nআপনার কোনো প্রশ্ন বা বিস্তারিত জিজ্ঞাস্য থাকলে সরাসরি আমাদের হেল্পলাইনে কথা বলুন। ধন্যবাদ। 💚`
-                                            )}`}
-                                            className="py-1 px-2 bg-stone-850 hover:bg-stone-800 border border-stone-800 text-stone-300 font-bold rounded text-[9px] text-center transition-all cursor-pointer"
-                                          >
-                                            ✉️ Email
-                                          </a>
-                                        </div>
-                                      </div>
-
-                                    </div>
-                                  </div>
-
-                                  {/* LOWER BULLET ACTIONS */}
-                                  <div className="bg-stone-950/40 p-2 rounded border border-stone-850/50 flex flex-wrap gap-2 items-center justify-between text-[11px]">
-                                    <span className="text-stone-400 font-semibold">
-                                      Quick Order Actions:
-                                    </span>
-                                    <div className="flex gap-1.5">
-                                      {order.status === 'Pending' && (
-                                        <button
-                                          onClick={() => {
-                                            updateOrderStatus(order.id, 'Approved');
-                                            triggerFeedback('Order checked and approved!');
-                                          }}
-                                          className="p-1 px-2.5 bg-emerald-950 text-emerald-400 font-bold border border-emerald-900 hover:bg-emerald-500 hover:text-stone-950 rounded text-[9px] transition-all cursor-pointer"
-                                        >
-                                          ✓ Approve Order
-                                        </button>
-                                      )}
-                                      
-                                      {order.status !== 'Shipped' && order.status !== 'Delivered' && order.status !== 'Cancelled' && (
-                                        <button
-                                          onClick={() => {
-                                            updateOrderStatus(order.id, 'Shipped');
-                                            triggerFeedback('Order shipped via delivery partner!');
-                                          }}
-                                          className="p-1 px-2.5 bg-blue-950 text-blue-400 font-bold border border-blue-900 hover:bg-blue-500 hover:text-stone-950 rounded text-[9px] transition-all cursor-pointer"
-                                        >
-                                          📦 Mark as Shipped
-                                        </button>
-                                      )}
-
-                                      {order.status !== 'Delivered' && order.status !== 'Cancelled' && (
-                                        <button
-                                          onClick={() => {
-                                            updateOrderStatus(order.id, 'Delivered');
-                                            triggerFeedback('Completed! Order marked as successfully Delivered.');
-                                          }}
-                                          className="p-1 px-2.5 bg-sky-950 text-sky-400 font-bold border border-sky-900 hover:bg-sky-500 hover:text-stone-950 rounded text-[9px] transition-all cursor-pointer"
-                                        >
-                                          🎉 Deliver Order Complete
-                                        </button>
-                                      )}
-                                    </div>
-                                  </div>
-
-                                </div>
-                              ))}
-                            </div>
-                          )}
-
-                        </div>
-
-                      </div>
+                      <AdminOrdersDashboard />
                     )}
 
                     {/* TAB CONTENT: SECURITY & PASSWORD CREDENTIALS SECTION */}

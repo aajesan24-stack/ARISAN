@@ -14,6 +14,7 @@ import { ProductDetailsView } from './views/ProductDetailsView';
 import { CartView } from './views/CartView';
 import { CheckoutView } from './views/CheckoutView';
 import { AdminDashboardView } from './views/AdminDashboardView';
+import { CustomerProfileView } from './views/CustomerProfileView';
 import {
   AboutUsView,
   AboutOwnerView,
@@ -178,6 +179,8 @@ function AppContent() {
         return <CheckoutView />;
       case 'admin-dashboard':
         return <AdminDashboardView />;
+      case 'customer-profile':
+        return <CustomerProfileView />;
       case 'about-us':
         return <AboutUsView />;
       case 'about-owner':

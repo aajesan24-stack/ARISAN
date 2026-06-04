@@ -232,9 +232,26 @@ export const Navbar: React.FC = () => {
               {/* Profile triggers */}
               {currentUser ? (
                 <div className="flex items-center gap-2">
-                  <span className="hidden md:inline text-xs text-[var(--theme-header-text)]/80 font-medium">
+                  <span className="hidden lg:inline text-xs text-[var(--theme-header-text)]/80 font-medium">
                     {language === 'bn' ? 'স্বাগতম, ' : 'Hi, '} {currentUser.name}
                   </span>
+                  <button
+                    onClick={() => {
+                      if (currentUser.role === 'admin') {
+                        setActiveTab('admin-dashboard');
+                      } else {
+                        setActiveTab('customer-profile');
+                      }
+                    }}
+                    className="flex items-center gap-1.5 text-xs px-2.5 py-1 bg-amber-400 text-stone-950 font-bold rounded hover:bg-amber-300 transition-all cursor-pointer shadow-sm"
+                  >
+                    <User className="w-3.5 h-3.5" />
+                    <span>
+                      {currentUser.role === 'admin' 
+                        ? (language === 'bn' ? 'অ্যাডমিন প্যানেল' : 'Admin Panel') 
+                        : (language === 'bn' ? 'আমার প্রোফাইল' : 'My Profile')}
+                    </span>
+                  </button>
                   <button
                     onClick={logout}
                     className="text-[var(--theme-header-text)]/85 text-xs px-2.5 py-1 border border-[var(--theme-header-text)]/20 hover:border-[var(--theme-header-text)]/50 rounded hover:text-[var(--theme-header-text)] hover:bg-[var(--theme-header-text)]/5 transition-all cursor-pointer"
@@ -329,6 +346,14 @@ export const Navbar: React.FC = () => {
               >
                 {t('nav.trackStatus')}
               </button>
+              {currentUser && currentUser.role === 'customer' && (
+                <button 
+                  onClick={() => setActiveTab('customer-profile')} 
+                  className={`hover:text-[var(--theme-secondary-text)] transition-colors cursor-pointer pb-0.5 ${activeTab === 'customer-profile' ? 'text-[var(--theme-secondary-text)] border-b-2 border-[var(--theme-secondary-text)] font-semibold' : ''}`}
+                >
+                  {language === 'bn' ? 'আমার প্রোফাইল' : 'My Profile'}
+                </button>
+              )}
             </div>
           </div>
         </div>
