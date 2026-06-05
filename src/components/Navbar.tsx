@@ -62,12 +62,12 @@ export const Navbar: React.FC = () => {
     setShowSearchDropdown(false);
   };
 
-  const handleAuthSubmit = (e: React.FormEvent) => {
+  const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError('');
 
     if (authMode === 'login') {
-      const res = loginWithPhone(phone, password);
+      const res = await loginWithPhone(phone, password);
       if (res.success) {
         setAuthModalOpen(false);
         setPhone('');
@@ -80,7 +80,7 @@ export const Navbar: React.FC = () => {
       }
     } else {
       // Register (Sign Up)
-      const res = registerCustomer(phone, password, selectedDistrict);
+      const res = await registerCustomer(phone, password, selectedDistrict);
       if (res.success) {
         setAuthModalOpen(false);
         setPhone('');

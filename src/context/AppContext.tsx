@@ -30,8 +30,8 @@ interface AppContextType {
   login: (email: string, name: string, role: 'admin' | 'customer', phone?: string, district?: string) => void;
   logout: () => void;
   registeredCustomers: { phone: string; password?: string; district: string; name: string }[];
-  registerCustomer: (phone: string, password: string, district: string, name?: string) => { success: boolean; message: string };
-  loginWithPhone: (phone: string, password: string) => { success: boolean; message: string };
+  registerCustomer: (phone: string, password: string, district: string, name?: string) => Promise<{ success: boolean; message: string }>;
+  loginWithPhone: (phone: string, password: string) => Promise<{ success: boolean; message: string }>;
   updateRegisteredCustomersList: (newList: { phone: string; password?: string; district: string; name: string }[]) => void;
 
   // Active page routing
@@ -241,59 +241,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const response = await fetch('/api/customers');
         const data = await response.json();
         if (data && Array.isArray(data.customers)) {
-          const localVal = localStorage.getItem('arisan_registered_customers');
-          const localCustomers = localVal ? JSON.parse(localVal) : [];
-          
-          const mergedMap = new Map();
-          // First add local ones
-          localCustomers.forEach((c: any) => {
-            if (c.phone) mergedMap.set(c.phone, c);
-          });
-          // Then add server ones (merging them)
-          data.customers.forEach((c: any) => {
-            if (c.phone) mergedMap.set(c.phone, c);
-          });
-
-          const merged = Array.from(mergedMap.values());
-          setRegisteredCustomers(merged);
-          localStorage.setItem('arisan_registered_customers', JSON.stringify(merged));
-
-          // Post standard merged state back to server
-          await fetch('/api/customers/sync', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ customers: merged })
-          });
+          setRegisteredCustomers(data.customers);
+          localStorage.setItem('arisan_registered_customers', JSON.stringify(data.customers));
         }
       } catch (err) {
-        console.error('Error fetching/syncing customers on mount', err);
+        console.error('Error fetching customers from Node backend on mount:', err);
       }
     };
     syncOnMount();
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem('arisan_registered_customers', JSON.stringify(registeredCustomers));
-    
-    // Sync to backend database whenever registered customers list is modified
-    const syncToBackend = async () => {
-      try {
-        await fetch('/api/customers/sync', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ customers: registeredCustomers })
-        });
-      } catch (e) {
-        console.error('Error syncing customer changes to backend', e);
-      }
-    };
-    if (registeredCustomers.length > 0) {
-      syncToBackend();
-    }
-  }, [registeredCustomers]);
-
-  const updateRegisteredCustomersList = (newList: typeof registeredCustomers) => {
+  const updateRegisteredCustomersList = async (newList: typeof registeredCustomers) => {
     setRegisteredCustomers(newList);
+    localStorage.setItem('arisan_registered_customers', JSON.stringify(newList));
+    try {
+      await fetch('/api/customers/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ customers: newList })
+      });
+    } catch (e) {
+      console.error('Error syncing updated customer list to backend:', e);
+    }
   };
 
   // Visual Editing Mode States
@@ -468,6 +437,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           parsed.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
           setOrders(parsed);
         }
+
+        // Fetch customers
+        try {
+          const { data: dbCustomers, error: custErr } = await supabase.from('arisan_customers').select('*');
+          const localVal = localStorage.getItem('arisan_registered_customers');
+          const localCustomers = localVal ? JSON.parse(localVal) : [];
+          
+          const mergedMap = new Map();
+          localCustomers.forEach((c: any) => {
+            if (c.phone) mergedMap.set(c.phone, c);
+          });
+
+          if (!custErr && dbCustomers && dbCustomers.length > 0) {
+            const parsed = dbCustomers.map((row: any) => row.data);
+            parsed.forEach((c: any) => {
+              if (c.phone) mergedMap.set(c.phone, c);
+            });
+          }
+
+          // Fetch from Supabase settings backup too
+          try {
+            const { data: dbSettings, error: sErr } = await supabase.from('arisan_settings').select('*').eq('id', 'default_settings').single();
+            if (!sErr && dbSettings && dbSettings.data && Array.isArray(dbSettings.data.registeredCustomersList)) {
+              dbSettings.data.registeredCustomersList.forEach((c: any) => {
+                if (c && c.phone) mergedMap.set(c.phone, c);
+              });
+            }
+          } catch (err) {}
+
+          const merged = Array.from(mergedMap.values());
+          setRegisteredCustomers(merged);
+          localStorage.setItem('arisan_registered_customers', JSON.stringify(merged));
+        } catch (e) {
+          console.warn('Could not load arisan_customers table (ignored):', e);
+        }
       } catch (err) {
         console.warn('Supabase automatic hydrate block warning:', err);
       }
@@ -529,33 +533,65 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setActiveTab('home');
   };
 
-  const registerCustomer = (phone: string, password: string, district: string, name?: string) => {
+  const normalizePhoneNumber = (phone: string): string => {
+    // Strip all non-digit characters
+    const clean = phone.replace(/\D/g, '');
+    // If starts with 880, remove it
+    if (clean.startsWith('880')) {
+      return clean.slice(3);
+    }
+    // If starts with 0, remove it
+    if (clean.startsWith('0')) {
+      return clean.slice(1);
+    }
+    return clean;
+  };
+
+  const registerCustomer = async (phone: string, password: string, district: string, name?: string) => {
     const normalizedPhone = phone.trim();
     if (!normalizedPhone) {
       return { success: false, message: language === 'bn' ? 'অনুগ্রহ করে মোবাইল নম্বর দিন।' : 'Please provide a phone number.' };
     }
-    
-    const exists = registeredCustomers.some(c => c.phone === normalizedPhone);
-    if (exists) {
-      return { success: false, message: language === 'bn' ? 'এই মোবাইল নম্বরটি দিয়ে ইতিপূর্বেই একাউন্ট তৈরি করা হয়েছে।' : 'An account with this phone number already exists.' };
+
+    try {
+      const resp = await fetch('/api/customers/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          phone: normalizedPhone,
+          password,
+          district,
+          name,
+          language
+        })
+      });
+
+      const data = await resp.json();
+      if (!resp.ok || !data.success) {
+        return { success: false, message: data.message || (language === 'bn' ? 'একাউন্ট তৈরি করা ব্যর্থ হয়েছে!' : 'Registration failed!') };
+      }
+
+      // Reload customers list from server and cache
+      const listResp = await fetch('/api/customers');
+      const listData = await listResp.json();
+      if (listData && Array.isArray(listData.customers)) {
+        setRegisteredCustomers(listData.customers);
+        localStorage.setItem('arisan_registered_customers', JSON.stringify(listData.customers));
+      }
+
+      const registeredUser = data.customer;
+      login(registeredUser.phone + '@arisan.com', registeredUser.name, 'customer', registeredUser.phone, registeredUser.district);
+
+      return { success: true, message: data.message };
+    } catch (err: any) {
+      console.error('Error during client registerCustomer call:', err);
+      return { success: false, message: language === 'bn' ? 'সার্ভার সংযোগে ত্রুটি ঘটেছে!' : 'Network connection error!' };
     }
-
-    const displayName = name?.trim() || `${language === 'bn' ? 'ক্রেতা' : 'Customer'} (${normalizedPhone.slice(-4)})`;
-    const newCustomer = {
-      phone: normalizedPhone,
-      password,
-      district,
-      name: displayName
-    };
-
-    setRegisteredCustomers(prev => [...prev, newCustomer]);
-    
-    // Auto login
-    login(normalizedPhone + '@arisan.com', displayName, 'customer', normalizedPhone, district);
-    return { success: true, message: language === 'bn' ? 'সফলভাবে একাউন্ট তৈরি হয়েছে!' : 'Account registered successfully!' };
   };
 
-  const loginWithPhone = (phone: string, password: string) => {
+  const loginWithPhone = async (phone: string, password: string) => {
     const normalizedPhone = phone.trim();
     const cleanPassword = password || '';
 
@@ -573,17 +609,40 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     }
 
-    const matched = registeredCustomers.find(c => c.phone === normalizedPhone);
-    if (!matched) {
-      return { success: false, message: language === 'bn' ? 'এই মোবাইল নম্বর দিয়ে কোনো একাউন্ট পাওয়া যায়নি।' : 'No account found with this phone number.' };
-    }
+    try {
+      const resp = await fetch('/api/customers/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          phone: normalizedPhone,
+          password: cleanPassword,
+          language
+        })
+      });
 
-    if (matched.password !== cleanPassword) {
-      return { success: false, message: language === 'bn' ? 'মোবাইল নম্বর অথবা পাসওয়ার্ডটি সঠিক নয়।' : 'Incorrect phone number or password.' };
-    }
+      const data = await resp.json();
+      if (!resp.ok || !data.success) {
+        return { success: false, message: data.message || (language === 'bn' ? 'লগইন ব্যর্থ হয়েছে!' : 'Login failed!') };
+      }
 
-    login(normalizedPhone + '@arisan.com', matched.name, 'customer', normalizedPhone, matched.district);
-    return { success: true, message: language === 'bn' ? 'লগইন সফল হয়েছে!' : 'Logged in successfully!' };
+      // Sync customer registry with backend to ensure the client stays updated
+      const listResp = await fetch('/api/customers');
+      const listData = await listResp.json();
+      if (listData && Array.isArray(listData.customers)) {
+        setRegisteredCustomers(listData.customers);
+        localStorage.setItem('arisan_registered_customers', JSON.stringify(listData.customers));
+      }
+
+      const loggedUser = data.customer;
+      login(loggedUser.phone + '@arisan.com', loggedUser.name, 'customer', loggedUser.phone, loggedUser.district);
+
+      return { success: true, message: data.message };
+    } catch (err: any) {
+      console.error('Error during client loginWithPhone call:', err);
+      return { success: false, message: language === 'bn' ? 'সার্ভার সংযোগে ত্রুটি ঘটেছে!' : 'Network connection error!' };
+    }
   };
 
   // Cart operations

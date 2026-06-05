@@ -18,6 +18,7 @@ export interface SupabaseHealth {
     coupons: boolean;
     reviews: boolean;
     settings: boolean;
+    customers: boolean;
   };
 }
 
@@ -35,6 +36,7 @@ export async function checkSupabaseHealth(): Promise<SupabaseHealth> {
       coupons: false,
       reviews: false,
       settings: false,
+      customers: false,
     }
   };
 
@@ -62,6 +64,10 @@ export async function checkSupabaseHealth(): Promise<SupabaseHealth> {
     // Check settings table
     const { error: setErr } = await supabase.from('arisan_settings').select('id').limit(1);
     health.tableStatus.settings = !setErr;
+
+    // Check customers table
+    const { error: custErr } = await supabase.from('arisan_customers').select('id').limit(1);
+    health.tableStatus.customers = !custErr;
 
     // Supabase compiles as connected if at least one query didn't throw network level error
     const anyTableSucceeded = Object.values(health.tableStatus).some(status => status === true);
@@ -169,6 +175,19 @@ DROP POLICY IF EXISTS "Public Read Access" ON arisan_settings;
 DROP POLICY IF EXISTS "Public Insert/Update/Delete Access" ON arisan_settings;
 CREATE POLICY "Public Read Access" ON arisan_settings FOR SELECT USING (true);
 CREATE POLICY "Public Insert/Update/Delete Access" ON arisan_settings FOR ALL USING (true) WITH CHECK (true);
+
+-- 7. Create table for Customer accounts
+CREATE TABLE IF NOT EXISTS arisan_customers (
+  id text PRIMARY KEY,
+  data jsonb NOT NULL,
+  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE arisan_customers ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public Read Access" ON arisan_customers;
+DROP POLICY IF EXISTS "Public Insert/Update/Delete Access" ON arisan_customers;
+CREATE POLICY "Public Read Access" ON arisan_customers FOR SELECT USING (true);
+CREATE POLICY "Public Insert/Update/Delete Access" ON arisan_customers FOR ALL USING (true) WITH CHECK (true);
 
 
 -- ==========================================

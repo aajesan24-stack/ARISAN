@@ -4,8 +4,26 @@ import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import { createServer as createViteServer } from 'vite';
+import { createClient } from '@supabase/supabase-js';
 
 dotenv.config();
+
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://gqqwplaqlqrwweovrece.supabase.co';
+const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxcXdwbGFxbHFyd3dlb3ZyZWNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4ODY4MTAsImV4cCI6MjA5NTQ2MjgxMH0.VN9HQsvgqSMfH1CImR6LDiNFhjU3A1HuKRk5ZAkpZhk';
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+function normalizePhoneNumber(phone: string): string {
+  if (!phone) return '';
+  const clean = phone.replace(/\D/g, '');
+  if (clean.startsWith('880')) {
+    return clean.slice(3);
+  }
+  if (clean.startsWith('0')) {
+    return clean.slice(1);
+  }
+  return clean;
+}
 
 const CONFIG_FILE = path.join(process.cwd(), 'smtp-config.json');
 
@@ -105,35 +123,264 @@ function saveRegisteredCustomers(customers: any[]) {
   }
 }
 
+async function getMergedCustomersFromDatabaseAndFile() {
+  const fileCustomers = getRegisteredCustomers();
+  const mergedMap = new Map();
+
+  // 1. Seed from local file
+  fileCustomers.forEach((c: any) => {
+    if (c.phone) {
+      mergedMap.set(normalizePhoneNumber(c.phone), c);
+    }
+  });
+
+  // 2. Fetch from Supabase Settings backup
+  try {
+    const { data: dbSettings, error: sErr } = await supabase
+      .from('arisan_settings')
+      .select('data')
+      .eq('id', 'default_settings')
+      .single();
+
+    if (!sErr && dbSettings && dbSettings.data && Array.isArray(dbSettings.data.registeredCustomersList)) {
+      dbSettings.data.registeredCustomersList.forEach((c: any) => {
+        if (c && c.phone) {
+          mergedMap.set(normalizePhoneNumber(c.phone), c);
+        }
+      });
+    }
+  } catch (err) {
+    console.warn('[SERVER SECURITY] Failed to load customers from Supabase Settings backup:', err);
+  }
+
+  // 3. Attempt to fetch from Supabase customers table directly
+  try {
+    const { data: dbCustomers, error: custErr } = await supabase
+      .from('arisan_customers')
+      .select('*');
+
+    if (!custErr && dbCustomers && dbCustomers.length > 0) {
+      dbCustomers.forEach((row: any) => {
+        const c = row.data;
+        if (c && c.phone) {
+          mergedMap.set(normalizePhoneNumber(c.phone), c);
+        }
+      });
+    }
+  } catch (err) {
+    console.log('[SERVER SECURITY] Info: arisan_customers table not found or inaccessible (ignored):', err);
+  }
+
+  return Array.from(mergedMap.values());
+}
+
+async function syncMergedCustomersToDestinations(customers: any[]) {
+  // 1. Save to local Express file
+  saveRegisteredCustomers(customers);
+
+  // 2. Save directly to Supabase settings backup
+  try {
+    const { data: dbSettings, error: sErr } = await supabase
+      .from('arisan_settings')
+      .select('*')
+      .eq('id', 'default_settings')
+      .single();
+
+    if (!sErr && dbSettings && dbSettings.data) {
+      const updatedSettings = {
+        ...dbSettings.data,
+        registeredCustomersList: customers
+      };
+      await supabase
+        .from('arisan_settings')
+        .upsert({ id: 'default_settings', data: updatedSettings });
+    }
+  } catch (err) {
+    console.warn('[SERVER SECURITY] Could not sync customer update to Supabase settings:', err);
+  }
+
+  // 3. Save to Supabase Customers table (silently catches PGRST205 missing table error)
+  try {
+    const uploads = customers.map((c: any) =>
+      supabase.from('arisan_customers').upsert({ id: c.phone, data: c })
+    );
+    await Promise.all(uploads);
+  } catch (err) {
+    // Squelch expected PGRST205 / RLS warning
+  }
+}
+
 // CUSTOMERS DYNAMIC RECONCILIATION API 1: Retrieve all registered customers
-app.get('/api/customers', (req, res) => {
-  res.json({ customers: getRegisteredCustomers() });
+app.get('/api/customers', async (req, res) => {
+  try {
+    const merged = await getMergedCustomersFromDatabaseAndFile();
+    saveRegisteredCustomers(merged);
+    res.json({ customers: merged });
+  } catch (err: any) {
+    console.error('API Error in GET /api/customers:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 // CUSTOMERS DYNAMIC RECONCILIATION API 2: Sync/save list bidirectionally
-app.post('/api/customers/sync', (req, res) => {
+app.post('/api/customers/sync', async (req, res) => {
   const { customers } = req.body;
   if (!Array.isArray(customers)) {
     return res.status(400).json({ success: false, error: 'Customers array is required.' });
   }
 
-  const existing = getRegisteredCustomers();
-  const mergedMap = new Map();
+  try {
+    const currentMerged = await getMergedCustomersFromDatabaseAndFile();
+    const mergedMap = new Map();
 
-  // Load existing server customers first
-  existing.forEach((c: any) => {
-    if (c.phone) mergedMap.set(c.phone, c);
-  });
+    // Seed existing
+    currentMerged.forEach((c: any) => {
+      if (c.phone) mergedMap.set(normalizePhoneNumber(c.phone), c);
+    });
 
-  // Overwrite or merge with incoming client customers (allows edits, additions, password changes)
-  customers.forEach((c: any) => {
-    if (c.phone) mergedMap.set(c.phone, c);
-  });
+    // Add incoming
+    customers.forEach((c: any) => {
+      if (c.phone) {
+        mergedMap.set(normalizePhoneNumber(c.phone), c);
+      }
+    });
 
-  const mergedList = Array.from(mergedMap.values());
-  saveRegisteredCustomers(mergedList);
+    const finalizedList = Array.from(mergedMap.values());
+    await syncMergedCustomersToDestinations(finalizedList);
 
-  res.json({ success: true, customers: mergedList });
+    res.json({ success: true, customers: finalizedList });
+  } catch (err: any) {
+    console.error('API Error in POST /api/customers/sync:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// CUSTOMERS DYNAMIC RECONCILIATION API 3: Register a new customer
+app.post('/api/customers/register', async (req, res) => {
+  const { phone, password, district, name, language } = req.body;
+  const isBn = language === 'bn';
+
+  const cleanPhone = (phone || '').trim();
+  const cleanPassword = (password || '').trim();
+  const cleanDistrict = (district || 'Dhaka').trim();
+  const cleanName = (name || '').trim();
+
+  if (!cleanPhone) {
+    return res.status(400).json({
+      success: false,
+      message: isBn ? 'অনুগ্রহ করে মোবাইল নম্বর দিন।' : 'Please provide a phone number.'
+    });
+  }
+
+  if (!cleanPassword) {
+    return res.status(400).json({
+      success: false,
+      message: isBn ? 'অনুগ্রহ করে পাসওয়ার্ড দিন।' : 'Please provide a password.'
+    });
+  }
+
+  try {
+    const currentMerged = await getMergedCustomersFromDatabaseAndFile();
+    console.log(`[AUTH REGISTER] Attempting to register customer: ${cleanPhone}. Total current users in DB: ${currentMerged.length}`);
+
+    // Check collision using normalized comparison
+    const targetNorm = normalizePhoneNumber(cleanPhone);
+    const exists = currentMerged.some(c => normalizePhoneNumber(c.phone) === targetNorm);
+
+    if (exists) {
+      console.log(`[AUTH REGISTER-COLLISION] Phone registration blocked! Mobile number ${cleanPhone} already registered.`);
+      return res.status(400).json({
+        success: false,
+        message: isBn 
+          ? 'এই মোবাইল নম্বরটি দিয়ে ইতিপূর্বেই একাউন্ট তৈরি করা হয়েছে।' 
+          : 'An account with this phone number already exists.'
+      });
+    }
+
+    const displayName = cleanName || (isBn ? `ক্রেতা (${cleanPhone.slice(-4)})` : `Customer (${cleanPhone.slice(-4)})`);
+    const newCustomer = {
+      phone: cleanPhone,
+      password: cleanPassword,
+      district: cleanDistrict,
+      name: displayName
+    };
+
+    const updatedList = [...currentMerged, newCustomer];
+    await syncMergedCustomersToDestinations(updatedList);
+
+    console.log(`[AUTH REGISTER-SUCCESS] Successfully registered customer ${cleanPhone}! Name: ${displayName}`);
+
+    res.json({
+      success: true,
+      message: isBn ? 'সফলভাবে একাউন্ট তৈরি হয়েছে!' : 'Account registered successfully!',
+      customer: newCustomer
+    });
+  } catch (err: any) {
+    console.error('Error during customer registration:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// CUSTOMERS DYNAMIC RECONCILIATION API 4: Customer Login via phone/password
+app.post('/api/customers/login', async (req, res) => {
+  const { phone, password, language } = req.body;
+  const isBn = language === 'bn';
+
+  const cleanPhone = (phone || '').trim();
+  const cleanPassword = password || '';
+
+  if (!cleanPhone) {
+    return res.status(400).json({
+      success: false,
+      message: isBn ? 'অনুগ্রহ করে মোবাইল নম্বর দিন।' : 'Please provide a phone number.'
+    });
+  }
+
+  try {
+    const currentMerged = await getMergedCustomersFromDatabaseAndFile();
+    const targetNorm = normalizePhoneNumber(cleanPhone);
+
+    console.log(`[AUTH LOGIN-DEBUG-DB-QUERY] Retrieving customers. Total database users examined: ${currentMerged.length}`);
+    console.log(`[AUTH LOGIN-DEBUG-NORM-CHECK] Matching against normalized input: "${targetNorm}"`);
+
+    // Show the exact query process
+    for (const c of currentMerged) {
+      const cNorm = normalizePhoneNumber(c.phone);
+      console.log(`  - Comparing: Record ID "${c.phone}" (normalized: "${cNorm}") with Input Normalized: "${targetNorm}"`);
+    }
+
+    const matched = currentMerged.find(c => normalizePhoneNumber(c.phone) === targetNorm);
+
+    if (!matched) {
+      console.log(`[AUTH LOGIN-FAILED] No account holding normalized phone target "${targetNorm}" found in the central database!`);
+      return res.status(404).json({
+        success: false,
+        message: isBn 
+          ? 'এই মোবাইল নম্বর দিয়ে কোনো একাউন্ট পাওয়া যায়নি।' 
+          : 'No account found with this phone number.'
+      });
+    }
+
+    if (matched.password !== cleanPassword) {
+      console.log(`[AUTH LOGIN-FAILED] Account found for phone: ${cleanPhone}, but provided password does not match.`);
+      return res.status(401).json({
+        success: false,
+        message: isBn 
+          ? 'মোবাইল নম্বর অথবা পাসওয়ার্ডটি সঠিক নয়।' 
+          : 'Incorrect phone number or password.'
+      });
+    }
+
+    console.log(`[AUTH LOGIN-SUCCESS] Successful authenticating for Customer ${cleanPhone}!`);
+    return res.json({
+      success: true,
+      message: isBn ? 'লগইন সফল হয়েছে!' : 'Logged in successfully!',
+      customer: matched
+    });
+  } catch (err: any) {
+    console.error('Error during customer login:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
 // SECURITY API 1: Request OTP validation
