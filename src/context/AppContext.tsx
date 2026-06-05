@@ -573,21 +573,38 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return { success: false, message: data.message || (language === 'bn' ? 'একাউন্ট তৈরি করা ব্যর্থ হয়েছে!' : 'Registration failed!') };
       }
 
-      // Reload customers list from server and cache
-      const listResp = await fetch('/api/customers');
-      const listData = await listResp.json();
-      if (listData && Array.isArray(listData.customers)) {
-        setRegisteredCustomers(listData.customers);
-        localStorage.setItem('arisan_registered_customers', JSON.stringify(listData.customers));
+      const registeredUser = data.customer;
+
+      // Reload customers list from server and cache gracefully
+      try {
+        const listResp = await fetch('/api/customers');
+        if (listResp.ok) {
+          const listData = await listResp.json();
+          if (listData && Array.isArray(listData.customers)) {
+            setRegisteredCustomers(listData.customers);
+            localStorage.setItem('arisan_registered_customers', JSON.stringify(listData.customers));
+          }
+        }
+      } catch (listErr) {
+        console.warn('Could not reload customer list after registration (non-fatal):', listErr);
+        // Fallback: append locally
+        const fallbackCustomer = {
+          phone: registeredUser.phone,
+          district: registeredUser.district || district,
+          name: registeredUser.name
+        };
+        const updatedList = [...(registeredCustomers || []), fallbackCustomer];
+        setRegisteredCustomers(updatedList);
+        localStorage.setItem('arisan_registered_customers', JSON.stringify(updatedList));
       }
 
-      const registeredUser = data.customer;
       login(registeredUser.phone + '@arisan.com', registeredUser.name, 'customer', registeredUser.phone, registeredUser.district);
 
       return { success: true, message: data.message };
     } catch (err: any) {
       console.error('Error during client registerCustomer call:', err);
-      return { success: false, message: language === 'bn' ? 'সার্ভার সংযোগে ত্রুটি ঘটেছে!' : 'Network connection error!' };
+      const errMsg = err?.message || String(err);
+      return { success: false, message: language === 'bn' ? `সার্ভার সংযোগে ত্রুটি ঘটেছে! (${errMsg})` : `Network connection error! (${errMsg})` };
     }
   };
 
@@ -627,21 +644,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return { success: false, message: data.message || (language === 'bn' ? 'লগইন ব্যর্থ হয়েছে!' : 'Login failed!') };
       }
 
-      // Sync customer registry with backend to ensure the client stays updated
-      const listResp = await fetch('/api/customers');
-      const listData = await listResp.json();
-      if (listData && Array.isArray(listData.customers)) {
-        setRegisteredCustomers(listData.customers);
-        localStorage.setItem('arisan_registered_customers', JSON.stringify(listData.customers));
+      const loggedUser = data.customer;
+
+      // Sync customer registry with backend to ensure the client stays updated gracefully
+      try {
+        const listResp = await fetch('/api/customers');
+        if (listResp.ok) {
+          const listData = await listResp.json();
+          if (listData && Array.isArray(listData.customers)) {
+            setRegisteredCustomers(listData.customers);
+            localStorage.setItem('arisan_registered_customers', JSON.stringify(listData.customers));
+          }
+        }
+      } catch (listErr) {
+        console.warn('Could not reload customer list after login (non-fatal):', listErr);
+        // Fallback: append locally if missing
+        const exists = (registeredCustomers || []).some(c => c.phone === loggedUser.phone);
+        if (!exists) {
+          const fallbackCustomer = {
+            phone: loggedUser.phone,
+            district: loggedUser.district || 'Dhaka',
+            name: loggedUser.name
+          };
+          const updatedList = [...(registeredCustomers || []), fallbackCustomer];
+          setRegisteredCustomers(updatedList);
+          localStorage.setItem('arisan_registered_customers', JSON.stringify(updatedList));
+        }
       }
 
-      const loggedUser = data.customer;
       login(loggedUser.phone + '@arisan.com', loggedUser.name, 'customer', loggedUser.phone, loggedUser.district);
 
       return { success: true, message: data.message };
     } catch (err: any) {
       console.error('Error during client loginWithPhone call:', err);
-      return { success: false, message: language === 'bn' ? 'সার্ভার সংযোগে ত্রুটি ঘটেছে!' : 'Network connection error!' };
+      const errMsg = err?.message || String(err);
+      return { success: false, message: language === 'bn' ? `সার্ভার সংযোগে ত্রুটি ঘটেছে! (${errMsg})` : `Network connection error! (${errMsg})` };
     }
   };
 

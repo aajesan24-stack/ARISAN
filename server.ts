@@ -178,42 +178,51 @@ async function syncMergedCustomersToDestinations(customers: any[]) {
   // 1. Save to local Express file
   saveRegisteredCustomers(customers);
 
-  // 2. Save directly to Supabase settings backup
-  try {
-    const { data: dbSettings, error: sErr } = await supabase
-      .from('arisan_settings')
-      .select('*')
-      .eq('id', 'default_settings')
-      .single();
-
-    if (!sErr && dbSettings && dbSettings.data) {
-      const updatedSettings = {
-        ...dbSettings.data,
-        registeredCustomersList: customers
-      };
-      await supabase
+  // 2. Perform Supabase database sync completely in the background so it doesn't block Express routing thread / cause frontend timeouts
+  (async () => {
+    try {
+      // A. Save directly to Supabase settings backup
+      const { data: dbSettings, error: sErr } = await supabase
         .from('arisan_settings')
-        .upsert({ id: 'default_settings', data: updatedSettings });
-    }
-  } catch (err) {
-    console.warn('[SERVER SECURITY] Could not sync customer update to Supabase settings:', err);
-  }
+        .select('*')
+        .eq('id', 'default_settings')
+        .single();
 
-  // 3. Save to Supabase Customers table (silently catches PGRST205 missing table error)
-  try {
-    const uploads = customers.map((c: any) =>
-      supabase.from('arisan_customers').upsert({ id: c.phone, data: c })
-    );
-    await Promise.all(uploads);
-  } catch (err) {
-    // Squelch expected PGRST205 / RLS warning
-  }
+      if (!sErr && dbSettings && dbSettings.data) {
+        const updatedSettings = {
+          ...dbSettings.data,
+          registeredCustomersList: customers
+        };
+        await supabase
+          .from('arisan_settings')
+          .upsert({ id: 'default_settings', data: updatedSettings });
+      }
+    } catch (err) {
+      console.warn('[SERVER SECURITY] Non-blocking background settings sync failed:', err);
+    }
+
+    try {
+      // B. Save to Supabase arisan_customers table
+      const uploads = customers.map(async (c: any) => {
+        if (c && c.phone) {
+          const { error } = await supabase.from('arisan_customers').upsert({ id: c.phone, data: c });
+          if (error) {
+            console.warn(`[SUPABASE SYNC WARNING] Failed to background upsert customer ${c.phone}:`, error.message);
+          }
+        }
+      });
+      await Promise.all(uploads);
+    } catch (err) {
+      console.warn('[SERVER SECURITY] Non-blocking background customer profiles sync failed:', err);
+    }
+  })();
 }
 
 // CUSTOMERS DYNAMIC RECONCILIATION API 1: Retrieve all registered customers
 app.get('/api/customers', async (req, res) => {
   try {
     const merged = await getMergedCustomersFromDatabaseAndFile();
+    // Cache the merged list locally without executing heavy, blocking Supabase writes
     saveRegisteredCustomers(merged);
     res.json({ customers: merged });
   } catch (err: any) {

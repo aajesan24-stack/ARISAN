@@ -1,0 +1,20 @@
+[
+  {
+    "name": "Customer (0982)",
+    "phone": "01756360982",
+    "district": "Dhaka",
+    "password": "jesan@2007"
+  },
+  {
+    "name": "Test Customer",
+    "phone": "01873392781",
+    "district": "Dhaka",
+    "password": "mypassword"
+  },
+  {
+    "phone": "01317075977",
+    "password": "testpassword123",
+    "district": "Jessore",
+    "name": "Test Test"
+  }
+]
